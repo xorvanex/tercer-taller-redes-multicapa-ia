@@ -147,8 +147,20 @@ class ModernMlpGUI(ctk.CTk):
             justify="left",
             text_color="#CBD5E1"
         )
-        lbl_crit_desc.pack(anchor="w", padx=12, pady=(0, 8))
-
+        # Boton universal para restablecer y limpiar la interfaz
+        self.btn_reset_all = ctk.CTkButton(
+            self.sidebar,
+            text="↺ Restablecer / Limpiar Todo",
+            command=self._reset_entire_interface,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            fg_color="#334155",
+            hover_color="#475569",
+            border_width=1,
+            border_color="#475569",
+            text_color="#F8FAFC",
+            height=36
+        )
+        self.btn_reset_all.pack(side="bottom", fill="x", padx=16, pady=16)
 
     def _build_main_container(self):
         """Contenedor de pestanas principales estilo dashboard."""
@@ -1111,6 +1123,66 @@ class ModernMlpGUI(ctk.CTk):
             text_color="#34D399"
         )
         self.lbl_train_status.configure(text="Datos listos. Presione 'Entrenar Ambas Redes'.")
+
+    def _reset_entire_interface(self):
+        """Restaura completamente los modelos, graficas, hiperparametros y simuladores a su estado inicial."""
+        # 1. Restablecer estado de los modelos
+        self.model_ref = None
+        self.model_prop = None
+        self.is_training = False
+
+        # 2. Restablecer controles de Topologia
+        self.graph_model_var.set("Propio (10:16:8:1)")
+        self.graph_view_mode.set("Grafo Sinaptico Nitido")
+        self.focus_node_var.set("Todas las Relaciones")
+        self.f_focus_container.pack(side="left")
+        self._render_topology_view()
+
+        # 3. Restablecer Curvas de Aprendizaje
+        self.entry_epochs.delete(0, "end")
+        self.entry_epochs.insert(0, "500")
+        self.entry_lr.delete(0, "end")
+        self.entry_lr.insert(0, "0.01")
+        self.entry_mom.delete(0, "end")
+        self.entry_mom.insert(0, "0.0")
+
+        self.prog_bar.set(0.0)
+        self.btn_start_train.configure(state="normal")
+        self.lbl_train_status.configure(text="Listo para entrenar 500 epocas", text_color="#34D399")
+        self._init_train_plot()
+
+        # 4. Restablecer Evaluacion y Metricas
+        self.lbl_ref_metrics.configure(
+            text="Parametros: 121\nTest EMC: 8.529,83\nTest REMC: 92,36 µg/m³\nMAE: 68,14 µg/m³\nMaxAE: 532,32 µg/m³"
+        )
+        self.lbl_prop_metrics.configure(
+            text="Parametros: 321\nTest EMC: 7.782,96\nTest REMC: 88,22 µg/m³\nMAE: 64,88 µg/m³\nMaxAE: 566,08 µg/m³"
+        )
+        self.lbl_gain_metrics.configure(
+            text="Reduccion EMC: -8,75%\nMejora REMC: -4,14 µg/m³\nMejora MAE: -3,26 µg/m³\nSobreajuste: Descartado"
+        )
+        self._init_eval_plot()
+
+        # 5. Restablecer Simulador en Tiempo Real
+        default_inputs = {
+            "TEMP": "-5.0", "PRES": "1022.0", "DEWP": "-7.0", "Iws": "5.36",
+            "hour": "3", "day": "2", "pm25_t": "181.0", "pm25_t-1": "159.0",
+            "pm25_t-2": "148.0", "pm25_t-3": "129.0"
+        }
+        for k, v in default_inputs.items():
+            if k in self.sim_inputs:
+                self.sim_inputs[k].delete(0, "end")
+                self.sim_inputs[k].insert(0, v)
+
+        self.lbl_sim_result.configure(
+            text="Configure las entradas y presione 'Simular Pronostico Neuronal' para proyectar la concentracion a 24h."
+        )
+        self._init_sim_plot()
+
+        messagebox.showinfo(
+            "Sistema Restablecido",
+            "La aplicacion ha sido restaurada con exito a su configuracion inicial predeterminada."
+        )
 
 
 def launch_gui():
