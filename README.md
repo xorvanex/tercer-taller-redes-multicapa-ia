@@ -1,5 +1,5 @@
 # TERCER TALLER: REDES NEURONALES MULTICAPA (MLP)
-### Predicción de Material Particulado Fino (PM2.5 a 24 horas) mediante Perceptrón Multicapa y Backpropagation
+### Predicción de Material Particulado Fino (PM2.5 a 24 horas) mediante Perceptrón Multicapa y Backpropagation Analítico
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Version"/>
@@ -14,13 +14,193 @@
 
 ---
 
-## Documentos de Trabajo y Enlaces de Acceso Rápido
+## Enlaces Directos a los Entregables Principales
 
-> **Recursos centrales del proyecto:**
-> * 📄 **Documento de Trabajo Formal:** [`docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx`](docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx) *(Manuscrito técnico estructurado en OnlyOffice / Word)*.
-> * 📊 **Libro de Auditoría y Control de Calidad (Excel):** [`docs/Auditoria_Estadistica_Dataset_PM25.xlsx`](docs/Auditoria_Estadistica_Dataset_PM25.xlsx) *(41.730 filas con fórmulas dinámicas sobre el rango `A2:K41731`)*.
-> * 📓 **Cuaderno Interactivo en la Nube:** [Google Colab — Auditoría Estadística Beijing PM2.5](https://colab.research.google.com/drive/1eXevX6U_6He5snGHMdMV9cGOJR5pyI5L?usp=sharing).
-> * 💻 **Notebook Local de Verificación:** [`notebooks/01_auditoria_y_verificacion_dataset_pm25.ipynb`](notebooks/01_auditoria_y_verificacion_dataset_pm25.ipynb).
+* **Informe Técnico Oficial (PDF):** [`docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.pdf`](docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.pdf)
+* **Documento Editable (Word):** [`docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx`](docs/Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx)
+* **Libro de Auditoría y Control de Calidad (Excel):** [`docs/Auditoria_Estadistica_Dataset_PM25.xlsx`](docs/Auditoria_Estadistica_Dataset_PM25.xlsx)
+* **Cuaderno Interactivo en la Nube:** [Google Colab — Auditoría Beijing PM2.5](https://colab.research.google.com/drive/1eXevX6U_6He5snGHMdMV9cGOJR5pyI5L?usp=sharing)
+* **Dataset Oficial Preprocesado:** [`data/datasets/dataset_pm25.csv`](data/datasets/dataset_pm25.csv)
+
+---
+
+## Guía Rápida de Instalación y Ejecución
+
+Siga estos pasos para configurar el entorno y ejecutar la solución en cualquier sistema operativo (Windows, Linux o macOS):
+
+### Paso 1: Clonar el Repositorio
+```bash
+git clone https://github.com/xorvanex/tercer-taller-redes-multicapa-ia.git
+cd tercer-taller-redes-multicapa-ia
+```
+
+### Paso 2: Crear y Activar un Entorno Virtual
+En Windows (PowerShell):
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+En Linux / macOS:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Paso 3: Instalar Dependencias
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Modos de Ejecución del Proyecto
+
+El sistema ofrece dos modalidades de ejecución a través del punto de entrada [`src/main.py`](src/main.py):
+
+### Modo 1: Interfaz Gráfica Interactiva de Escritorio (GUI) — Recomendado
+Inicia el panel de control interactivo construido en **CustomTkinter** y lienzos vectoriales de **Matplotlib**:
+```bash
+python src/main.py --gui
+```
+**Características de la GUI:**
+1. **Topología y Relaciones:** Tres vistas conmutables:
+   * *Grafo Sináptico Nítido:* Visualización de nodos circulares con sinapsis coloreadas por intensidad y filtro de enfoque para aislar la influencia de cualquier variable de entrada individual.
+   * *Diagrama de Bloques (estilo MATLAB):* Esquema modular con bloques de suma, funciones `tansig` y salida lineal `purelin`.
+   * *Mapa de Calor de Pesos ($W^{(1)}$):* Matriz numérica de pesos de la primera capa oculta.
+2. **Curvas de Aprendizaje:** Monitor en tiempo real del progreso de entrenamiento durante las 500 épocas, con barra de progreso y guía conceptual de hiperparámetros.
+3. **Evaluación y Métricas:** Tarjetas dinámicas de KPIs cuantitativos (MSE, RMSE, MAE) en escala normalizada y física real ($\mu\text{g/m}^3$), cálculo de ganancia del modelo propio y gráfico de 200 horas continuas de predicción vs. valor real.
+4. **Simulador en Tiempo Real:** Entrada interactiva de parámetros meteorológicos y retardos de contaminación, proyección de trayectoria temporal ($t-3 \to t \to t+24$) y clasificación del riesgo ambiental bajo los estándares de la OMS / EPA.
+5. **Botón de Restablecimiento Universal:** Permite regresar toda la interfaz a sus condiciones iniciales con un solo clic.
+
+---
+
+### Modo 2: Consola Automatizada / Benchmark Reproducible (CLI)
+Ejecuta el pipeline completo de entrenamiento sobre el tensor de 33.384 muestras, imprime la auditoría cuantitativa y exporta automáticamente las figuras científicas en alta resolución (300 DPI) a la carpeta `docs/img/`:
+```bash
+python src/main.py --cli
+```
+
+---
+
+## Resumen Ejecutivo de Resultados Experimentales
+
+Evaluación sobre las **8.346 observaciones no vistas del conjunto de prueba** (últimos 11 meses de la serie temporal):
+
+| Métrica de Desempeño | Modelo de Referencia (10:10:1) | Modelo Propio Propuesto (10:16:8:1) | Ganancia / Mejora Relativa |
+| :--- | :---: | :---: | :---: |
+| Topología de Capas | $10 \to 10 \to 1$ | $10 \to 16 \to 8 \to 1$ | $+1$ capa oculta de abstracción |
+| Parámetros Libres ($N_{params}$) | 121 | 321 | $+165,3\%$ capacidad representacional |
+| Tiempo de Entrenamiento (500 épocas) | 6,79 s | 21,13 s | $+14,34$ s sobre CPU (Full-Batch) |
+| **MSE Entrenamiento (Normalizado)** | 0,035462 | 0,031615 | $-10,85\%$ de error cuadrático |
+| **MSE Prueba (Normalizado)** | 0,034532 | 0,031509 | **$-8,75\%$ de error cuadrático** |
+| **MSE Prueba (Escala Real)** | **8.529,83 μg²/m⁶** | **7.782,96 μg²/m⁶** | **$-746,87$ unidades cuadradas** |
+| **RMSE Prueba (Escala Real)** | **92,36 μg/m³** | **88,22 μg/m³** | **$-4,14$ μg/m³ (Mejora del 4,48%)** |
+| **MAE Prueba (Escala Real)** | **65,41 μg/m³** | **61,73 μg/m³** | **$-3,68$ μg/m³** |
+
+<p align="center">
+  <img src="docs/img/Curvas_Aprendizaje_Comparativas.png" alt="Curvas de Aprendizaje Comparativas" width="85%"/>
+</p>
+<p align="center">
+  <em>Figura 1. Evolución del Error Cuadrático Medio normalizado (MSE) durante 500 épocas sobre el conjunto de entrenamiento y de prueba. La ausencia de divergencia confirma generalización sin sobreajuste.</em>
+</p>
+
+<p align="center">
+  <img src="docs/img/Comparativa_Prediccion_Real_vs_Predicha.png" alt="Comparativa Temporal Real vs Predicha" width="85%"/>
+</p>
+<p align="center">
+  <em>Figura 2. Seguimiento temporal de concentración de PM2.5 real vs. predicciones a 24 horas en una ventana de 200 horas consecutivas de prueba.</em>
+</p>
+
+---
+
+## Descripción del Problema y Dataset
+
+El objetivo del taller es predecir la concentración de material particulado fino **PM2.5 con 24 horas de antelación ($t+24$)** en la ciudad de Beijing, China, a partir de registros meteorológicos, temporales e inerciales.
+
+Se procesa el dataset oficial con **41.730 registros continuos y 11 variables**:
+
+| Variable | Tipo | Unidad / Rango | Rol en el Modelo | Justificación Técnica |
+| :--- | :---: | :---: | :---: | :--- |
+| `TEMP` | Continua | °C | Entrada | Modula la velocidad fotoquímica y la estabilidad atmosférica vertical. |
+| `PRES` | Continua | hPa | Entrada | Condiciona fenómenos anticiclónicos de acumulación o turbulencia de dispersión. |
+| `DEWP` | Continua | °C | Entrada | Indicador de humedad relativa y condensación de aerosoles secundarios. |
+| `Iws` | Continua | m/s | Entrada | Velocidad acumulada del viento; factor fundamental de ventilación y transporte. |
+| `hour` | Discreta | 0 – 23 | Entrada | Ciclo diurno humano (horas pico vehiculares, emisiones industriales y radiación solar). |
+| `day` | Discreta | 1 – 31 | Entrada | Periodicidad mensual y estacional de emisiones urbanas. |
+| `pm25_t` | Continua | μg/m³ | Entrada | Concentración de PM2.5 en el instante actual $t$ (regresor de orden 0). |
+| `pm25_t-1` | Continua | μg/m³ | Entrada | Retardo autorregresivo de 1 hora previa (inercia inmediata). |
+| `pm25_t-2` | Continua | μg/m³ | Entrada | Retardo autorregresivo de 2 horas previas (captura de tendencia sostenida). |
+| `pm25_t-3` | Continua | μg/m³ | Entrada | Retardo autorregresivo de 3 horas previas (memoria de acumulación de masa). |
+| **`pm25_t+24`** | **Continua** | **μg/m³** | **Salida Objetivo** | **Concentración de PM2.5 proyectada a 24 horas hacia el futuro.** |
+
+---
+
+## Control de Calidad y Preprocesamiento
+
+1. **Auditoría Paramétrica en Excel / OnlyOffice:**  
+   Libro [`docs/Auditoria_Estadistica_Dataset_PM25.xlsx`](docs/Auditoria_Estadistica_Dataset_PM25.xlsx) con fórmulas dinámicas sobre el rango absoluto `A2:K41731`:
+   * 41.730 registros válidos verificados (`=CONTAR`).
+   * 0 celdas vacías o nulas (`=CONTAR.BLANCO`).
+2. **Partición Temporal Cronológica (80% / 20%):**  
+   * **Entrenamiento:** 33.384 observaciones (primeras 33.384 horas consecutivas).
+   * **Prueba:** 8.346 observaciones (últimas 8.346 horas consecutivas).
+   * *Justificación:* Al tratarse de una serie temporal, mezclar aleatoriamente las muestras (*shuffle*) introduciría **fuga temporal de datos (*temporal data leakage*)**, entrenando al modelo con información del futuro.
+3. **Normalización Min-Max Simétrica en $[-1, +1]$:**  
+   $$x'_j = 2 \cdot \left( \frac{x_j - x_{j,\min}^{train}}{x_{j,\max}^{train} - x_{j,\min}^{train}} \right) - 1$$
+   * Parámetros calculados **exclusivamente sobre el conjunto de entrenamiento** para evitar fuga de información.
+   * Intervalo centrado en cero, optimizado para la activación `tansig` en capas ocultas.
+
+---
+
+## Arquitecturas Neuronales Comparadas
+
+* **Modelo de Referencia (Benchmark 10:10:1):**  
+  Topología con una sola capa oculta:
+  $$10 \xrightarrow{\text{tansig}} 10 \xrightarrow{\text{purelin}} 1$$
+  $$N_{params} = (10 \times 10 + 10) + (10 \times 1 + 1) = 110 + 11 = \mathbf{121 \text{ parámetros}}$$
+* **Modelo Propio Propuesto (Embudo 10:16:8:1):**  
+  Topología con dos capas ocultas en estructura de compresión progresiva:
+  $$10 \xrightarrow{\text{tansig}} 16 \xrightarrow{\text{tansig}} 8 \xrightarrow{\text{purelin}} 1$$
+  $$N_{params} = (10 \times 16 + 16) + (16 \times 8 + 8) + (8 \times 1 + 1) = 176 + 136 + 9 = \mathbf{321 \text{ parámetros}}$$
+  *Justificación:* La capa de 16 neuronas expande la dimensionalidad para capturar interacciones no lineales entre clima y contaminación previa; la capa de 8 neuronas contrae la representación latente actuando como un filtro de regularización implícita frente al ruido.
+
+---
+
+## Estructura del Directorio del Proyecto
+
+```text
+tercer-taller-redes-multicapa-ia/
+├── data/
+│   ├── datasets/
+│   │   └── dataset_pm25.csv             # Dataset oficial preprocesado (41.730 registros)
+│   └── enunciados/
+│       ├── Actividad RNA (MLP).docx     # Directrices y rúbrica oficial del docente
+│       ├── Informacion_actividad.txt    # Requisitos extraídos
+│       ├── Publicacion_Classroom.png    # Evidencia de publicación en Google Classroom
+│       └── Rubrica Octubre 2026.pdf     # Rúbrica de evaluación (8 puntos)
+│
+├── docs/
+│   ├── Auditoria_Estadistica_Dataset_PM25.xlsx # Libro Excel con fórmulas dinámicas
+│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx  # Documento técnico formal estructurado
+│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.pdf   # Informe técnico final en PDF para entrega
+│   ├── img/                             # Figuras científicas en alta resolución
+│   └── md/                              # Memorias técnicas en Markdown
+│
+├── notebooks/
+│   └── 01_auditoria_y_verificacion_dataset_pm25.ipynb # Cuaderno interactivo (Colab/Jupyter)
+│
+├── src/
+│   ├── __init__.py                      # Inicializador de paquete
+│   ├── data_loader.py                   # Carga, partición 80/20 y escalador Min-Max [-1, 1]
+│   ├── mlp.py                           # MLP vectorizado en NumPy con Backpropagation analítico
+│   ├── app_gui.py                       # Interfaz gráfica moderna en CustomTkinter (4 pestañas)
+│   └── main.py                          # Punto de entrada dual (--cli y --gui)
+│
+├── .gitignore                           # Exclusiones de control de versiones
+├── LICENSE                              # Licencia MIT académica
+├── README.md                            # Documentación principal del repositorio
+└── requirements.txt                     # Dependencias exactas del proyecto
+```
 
 ---
 
@@ -32,205 +212,7 @@
 * **Asignatura:** Inteligencia Artificial (Segundo Corte)
 * **Docente:** Manuel Alejandro Ospina Alarcón
 * **Autores:**
-  * **Dago David Palmera Navarro** — Código Estudiantil `0222321003`
-  * **Julián David Camargo Padilla** — Código Estudiantil `0222320016`
+  * **Dago David Palmera Navarro** — Código: `0222321003`
+  * **Julián David Camargo Padilla** — Código: `0222320016`
 * **Ponderación:** 8 puntos de la calificación definitiva del corte
-* **Fecha de Publicación Oficial:** Miércoles 07 de octubre de 2026 (14:39 en Google Classroom)
-* **Fecha Límite de Entrega:** Viernes 16 de octubre de 2026, 11:59 p. m.
-
----
-
-## Tabla de Contenido
-
-1. [Descripción General del Problema](#descripción-general-del-problema)
-2. [Descripción Técnica del Dataset](#descripción-técnica-del-dataset)
-3. [Control de Calidad y Auditoría Estadística](#control-de-calidad-y-auditoría-estadística)
-4. [Estrategia de Partición y Preprocesamiento](#estrategia-de-partición-y-preprocesamiento)
-5. [Diseño y Comparación de Arquitecturas](#diseño-y-comparación-de-arquitecturas)
-6. [Estructura del Directorio del Proyecto](#estructura-del-directorio-del-proyecto)
-7. [Requisitos y Configuración del Entorno](#requisitos-y-configuración-del-entorno)
-8. [Licencia](#licencia)
-
----
-
-## Descripción General del Problema
-
-El objetivo de esta actividad evaluativa es modelar, entrenar, validar y comparar arquitecturas de **Redes Neuronales Multicapa (MLP)** para la predicción de la concentración de material particulado fino **PM2.5 a 24 horas hacia adelante ($t+24$)** en la ciudad de Beijing, China.
-
-El problema presenta retos analíticos característicos de los sistemas dinámicos reales:
-* **Multivariabilidad:** Interacción conjunta de variables meteorológicas (temperatura, presión, punto de rocío y velocidad del viento) y factores de temporalidad humana y climática.
-* **Dependencia temporal y autocorrelación:** Fuerte inercia autoregresiva del contaminante en instantes previos ($pm25_t, pm25_{t-1}, pm25_{t-2}, pm25_{t-3}$).
-* **No linealidad:** Dinámicas atmosféricas complejas que no pueden resolverse con hiperplanos simples (limitación clásica demostrada por Minsky y Papert), exigiendo capas ocultas con funciones de activación continuas diferenciables (`tansig`) optimizadas mediante **Backpropagation**.
-
----
-
-## Descripción Técnica del Dataset
-
-Se utiliza una versión preprocesada del **Beijing PM2.5 Dataset** (`data/datasets/dataset_pm25.csv`), conformado por **41.730 observaciones** y **11 variables**:
-
-| Variable | Tipo | Unidad / Rango | Rol en el Modelo | Justificación Técnica |
-| :--- | :---: | :---: | :---: | :--- |
-| `TEMP` | Continua | $^\circ\text{C}$ | Entrada (Meteorológica) | Modula la velocidad de reacciones fotoquímicas y la estabilidad atmosférica vertical. |
-| `PRES` | Continua | $\text{hPa}$ | Entrada (Meteorológica) | Condiciona fenómenos anticiclónicos de acumulación o turbulencia de dispersión. |
-| `DEWP` | Continua | $^\circ\text{C}$ | Entrada (Meteorológica) | Punto de rocío; indicador de humedad relativa y formación de aerosoles secundarios. |
-| `Iws` | Continua | $\text{m/s}$ | Entrada (Meteorológica) | Velocidad acumulada del viento; factor fundamental de ventilación y transporte. |
-| `hour` | Discreta | $0 - 23$ | Entrada (Temporal) | Ciclo diurno humano (horas pico de tráfico vehicular, actividad industrial y radiación solar). |
-| `day` | Discreta | $1 - 31$ | Entrada (Temporal) | Estacionalidad y calendario del ciclo mensual de emisión. |
-| `pm25_t` | Continua | $\mu g/m^3$ | Entrada (Autorregresiva) | Concentración actual de PM2.5 en el instante $t$ (regresor de orden 0). |
-| `pm25_t-1` | Continua | $\mu g/m^3$ | Entrada (Autorregresiva) | Retardo de 1 hora previa (inercia inmediata de la serie temporal). |
-| `pm25_t-2` | Continua | $\mu g/m^3$ | Entrada (Autorregresiva) | Retardo de 2 horas previas (captura de tendencia sostenida). |
-| `pm25_t-3` | Continua | $\mu g/m^3$ | Entrada (Autorregresiva) | Retardo de 3 horas previas (memoria de acumulación de partículas). |
-| **`pm25_t+24`** | **Continua** | $\mu g/m^3$ | **Salida Objetivo (Target)** | **Concentración de PM2.5 a predecir a 24 horas hacia adelante.** |
-
----
-
-## Control de Calidad y Auditoría Estadística
-
-A fin de eliminar la concepción de "caja negra" y sustentar documentalmente la calidad del dataset, la verificación se realizó en dos niveles independientes:
-
-### 1. Auditoría Paramétrica en Excel / OnlyOffice
-Se construyó el libro [`docs/Auditoria_Estadistica_Dataset_PM25.xlsx`](docs/Auditoria_Estadistica_Dataset_PM25.xlsx), donde cada métrica fue calculada mediante **fórmulas dinámicas nativas** sobre el rango `Dataset_PM25!A2:K41731`:
-* Conteo de registros válidos: `=CONTAR(Dataset_PM25!X2:X41731)` $\to$ `41.730`.
-* Detección de datos nulos/vacíos: `=CONTAR.BLANCO(Dataset_PM25!X2:X41731)` $\to$ `0`.
-* Media aritmética y desviación estándar: `=PROMEDIO(...)` y `=DESVEST.M(...)`.
-* Cuartiles y percentiles: `=PERCENTIL.INC(..., 0.25)` y `=PERCENTIL.INC(..., 0.75)`.
-
-<p align="center">
-  <img src="docs/img/Captura_Auditoria_Estadistica_Excel.png" alt="Auditoría Estadística en Excel" width="90%"/>
-</p>
-
-### 2. Verificación Programática en Python y Google Colab
-Disponible en el cuaderno interactivo [Google Colab](https://colab.research.google.com/drive/1eXevX6U_6He5snGHMdMV9cGOJR5pyI5L?usp=sharing), validando tipos de datos (`float64`, `int64`) y confirmando con Pandas la ausencia total de nulos en todas las columnas.
-
----
-
-## Estrategia de Partición y Preprocesamiento
-
-1. **Partición Cronológica (80% / 20%):**
-   * **Entrenamiento (*Train*):** 33.384 observaciones (filas 2 a 33.385).
-   * **Prueba (*Test*):** 8.346 observaciones (filas 33.386 a 41.731).
-   * *Justificación:* Al tratarse de una serie temporal, una partición aleatoria provocaría **fuga temporal de datos (*temporal data leakage*)**, entrenando al modelo con observaciones del futuro respecto al conjunto de prueba.
-2. **Normalización Min-Max simétrica en $[-1, +1]$:**
-   $$x'_j = 2 \cdot \left( \frac{x_j - x_{j,\min}^{train}}{x_{j,\max}^{train} - x_{j,\min}^{train}} \right) - 1$$
-   * Los parámetros $x_{\min}$ y $x_{\max}$ se ajustan **estrictamente sobre el conjunto de entrenamiento** para blindar al modelo contra fuga de datos (*data leakage*).
-   * Compatible con la función de activación `tansig` en capas ocultas.
-
----
-
-## Diseño y Comparación de Arquitecturas
-
-Se definieron dos modelos neuronales para evaluación comparativa bajo idénticos hiperparámetros ($\eta = 0,01$, 500 épocas, optimización *Full-Batch*):
-
-### 1. Arquitectura de Referencia (Sugerida: 10:10:1)
-Topología base sugerida en la guía del docente con una sola capa oculta:
-$$\mathbf{10} \xrightarrow{\text{tansig}} \mathbf{10} \xrightarrow{\text{purelin}} \mathbf{1}$$
-* Total de parámetros: $N_{params}^{ref} = \underbrace{(10 \cdot 10 + 10)}_{\text{Capa Oculta 1}} + \underbrace{(10 \cdot 1 + 1)}_{\text{Capa Salida}} = 110 + 11 = \mathbf{121 \text{ parámetros}}$.
-
-<p align="center">
-  <img src="docs/img/Arquitectura_Referencia_10_10_1.jpg" alt="Arquitectura de Referencia 10:10:1" width="70%"/>
-</p>
-
-### 2. Arquitectura Propia Propuesta (10:16:8:1)
-Topología en **embudo de abstracción progresiva** con dos capas ocultas:
-$$\mathbf{10} \xrightarrow{\text{tansig}} \mathbf{16} \xrightarrow{\text{tansig}} \mathbf{8} \xrightarrow{\text{purelin}} \mathbf{1}$$
-* Total de parámetros: $N_{params}^{prop} = \underbrace{(10 \cdot 16 + 16)}_{\text{Capa Oculta 1}} + \underbrace{(16 \cdot 8 + 8)}_{\text{Capa Oculta 2}} + \underbrace{(8 \cdot 1 + 1)}_{\text{Capa Salida}} = 176 + 136 + 9 = \mathbf{321 \text{ parámetros}}$.
-
-<p align="center">
-  <img src="docs/img/Arquitectura_Propia_10_16_8_1.jpg" alt="Arquitectura Propia 10:16:8:1" width="70%"/>
-</p>
-
-### Tabla Resumen de Comparación Teórica
-
-| Criterio de Comparación | Arquitectura de Referencia | Arquitectura Propia Propuesta |
-| :--- | :---: | :---: |
-| **Topología** | $10:10:1$ | $10:16:8:1$ |
-| **Capas Ocultas** | 1 | 2 |
-| **Neuronas Ocultas** | 10 | 24 ($16 + 8$) |
-| **Funciones de Activación** | `tansig` / `purelin` | `tansig` / `tansig` / `purelin` |
-| **Total de Parámetros Calibrables** | **121** | **321** |
-| **Factor de Complejidad** | $1,0\times$ (Línea base) | $2,65\times$ ($321 / 121$) |
-| **Estructura** | Mapeo plano monocapa | Embudo jerárquico de abstracción |
-
----
-
-## Estructura del Directorio del Proyecto
-
-```text
-tercer-taller-redes-multicapa-ia/
-│
-├── data/
-│   ├── datasets/
-│   │   └── dataset_pm25.csv             # Conjunto de datos oficial preprocesado (41.730 registros)
-│   └── enunciados/
-│       ├── Actividad RNA (MLP).docx     # Documento guía y directrices del docente
-│       ├── Informacion_actividad.txt    # Requisitos extraídos en texto plano
-│       ├── Publicacion_Classroom.png    # Evidencia de publicación oficial
-│       └── Rubrica Octubre 2026.pdf     # Rúbrica de evaluación oficial (8 puntos)
-│
-├── docs/
-│   ├── Auditoria_Estadistica_Dataset_PM25.xlsx # Libro Excel con fórmulas dinámicas nativas
-│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx  # Documento técnico formal estructurado
-│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.pdf   # Informe técnico final en PDF para entrega
-│   ├── img/                             # Figuras experimentales generadas y diagramas
-│   │   ├── Arquitectura_Referencia_10_10_1.jpg
-│   │   ├── Arquitectura_Propia_10_16_8_1.jpg
-│   │   ├── Captura_Auditoria_Estadistica_Excel.png
-│   │   ├── Comparativa_Prediccion_Real_vs_Predicha.png
-│   │   ├── Curvas_Aprendizaje_Comparativas.png
-│   │   ├── Diagrama_Bloques_MATLAB_10_16_8_1.png
-│   │   ├── Dispersion_Real_vs_Predicho_Propio.png
-│   │   ├── Evidencia_Auditoria_Excel.png
-│   │   ├── Mapa_Calor_Pesos_W1_Propio.png
-│   │   └── Topologia_Grafo_Sinaptico_10_16_8_1.png
-│   └── md/                              # Capítulos y memorias técnicas en Markdown
-│       ├── 01_Introduccion_y_Objetivos.md
-│       ├── 02_Fundamentacion_Teorica.md
-│       ├── 03_Definicion_Problema_y_Caso_de_Estudio.md
-│       ├── 04_Preparacion_y_Arquitecturas.md
-│       ├── 05_Implementacion_y_Resultados.md
-│       └── 06_Conclusiones_Referencias_Anexos.md
-│
-├── notebooks/
-│   └── 01_auditoria_y_verificacion_dataset_pm25.ipynb # Cuaderno interactivo (Colab/Jupyter)
-│
-├── src/
-│   ├── __init__.py                      # Inicializador de paquete
-│   ├── data_loader.py                   # Carga, partición 80/20 cronológica y escalador Min-Max
-│   ├── mlp.py                           # Perceptrón Multicapa vectorizado en NumPy con Backpropagation
-│   ├── app_gui.py                       # Interfaz gráfica moderna en CustomTkinter (4 pestañas interactivas)
-│   └── main.py                          # Punto de entrada dual con soporte para CLI y GUI
-│
-├── .gitignore                           # Exclusiones de control de versiones
-├── LICENSE                              # Licencia MIT oficial
-├── README.md                            # Documentación principal del repositorio
-└── requirements.txt                     # Dependencias del entorno de ejecución
-```
-
----
-
-## Modos de Ejecución del Software
-
-El sistema proporciona dos modalidades operativas complementarias mediante [`src/main.py`](src/main.py):
-
-### 1. Modo Consola Automatizado (`--cli`)
-Ejecuta el ciclo de entrenamiento completo de 500 épocas para ambas arquitecturas, imprime la auditoría cuantitativa de métricas en la terminal y exporta automáticamente las figuras científicas en alta resolución a `docs/img/`:
-```bash
-python src/main.py --cli
-```
-
-### 2. Modo Interfaz Gráfica de Escritorio (`--gui`)
-Inicia la aplicación de escritorio interactiva desarrollada con **CustomTkinter**, que cuenta con 4 módulos de trabajo:
-* **Topología y Relaciones:** Tres vistas conmutables (Grafo sináptico nítido, Diagrama de bloques estilo MATLAB y Mapa de calor de pesos $\mathbf{W}^{(1)}$).
-* **Curvas de Aprendizaje:** Monitor interactivo del MSE en tiempo real.
-* **Evaluación y Métricas:** Comparativa cuantitativa con series temporales superpuestas reales vs. predichas.
-* **Simulador en Tiempo Real:** Pronóstico puntual interactivo con diagnóstico meteorológico y bandas de riesgo ambiental de la OMS.
-
-```bash
-python src/main.py --gui
-```
-
----
-
-## Licencia
-
-Este proyecto se distribuye bajo los términos de la **Licencia MIT**. Para más detalles, consulte el archivo [`LICENSE`](LICENSE).
+* **Licencia:** MIT License
