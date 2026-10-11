@@ -145,3 +145,21 @@ En cumplimiento del requerimiento de transparencia técnica, a continuación se 
    Se optó por procesar el tensor completo en cada época en lugar de Descenso de Gradiente Estocástico (SGD muestra a muestra). Esto permite calcular el gradiente analítico exacto de la función de coste cuadrática, garantizando curvas de pérdida suaves, deterministas y libres de ruido estocástico para una comparación justa entre ambas arquitecturas.
 4. **Diseño en Embudo Progresivo ($10 \to 16 \to 8 \to 1$):**  
    En lugar de incrementar el número de neuronas de forma homogénea, la estructura propuesta expande la dimensionalidad en la primera capa para capturar interacciones cruzadas no lineales y la contrae en la segunda capa para filtrar componentes redundantes, demostrando empíricamente una reducción del error cuadrático sin incurrir en sobreajuste.
+
+---
+
+## 8.6. Respuestas a Preguntas Críticas y Propuestas de Mejora
+
+En correspondencia directa con la guía de evaluación del docente (Sección 3.6 del enunciado), se consolidan a continuación las respuestas a las cuatro interrogantes de análisis:
+
+1. **¿Qué variables fueron más relevantes en la predicción?**  
+   Los **retardos autorregresivos inmediatos** (`pm25_t`, `pm25_t-1`, `pm25_t-2`, `pm25_t-3`) demostraron el mayor peso específico al gobernar la inercia temporal del sistema. Entre las variables meteorológicas exógenas, la **velocidad acumulada del viento (`Iws`)** fue la más determinante, actuando como un fuerte inhibidor físico de acumulación (ventilación de la cuenca), seguida por el **punto de rocío (`DEWP`)**, que modula la condensación de partículas por humedad.
+2. **¿El modelo generaliza adecuadamente o presenta sobreajuste (*overfitting*)?**  
+   **El modelo generaliza con alta fidelidad y descarta sobreajuste.** La evidencia cuantitativa es contundente: el MSE de entrenamiento del modelo propio finalizó en **$0,031615$**, mientras que el MSE de prueba sobre datos nunca vistos se ubicó en **$0,031509$** (una discrepancia mínima de $0,000106$). Asimismo, las curvas de aprendizaje descienden y se estabilizan asintóticamente sin ninguna pendiente ascendente en el conjunto de prueba.
+3. **¿Qué arquitectura fue mejor y por qué?**  
+   **La arquitectura propia propuesta ($10:16:8:1$) fue categóricamente superior.** Redujo el MSE de prueba en un **$8,75\%$** (de $8.529,83$ a $7.782,96$) y el RMSE en **$4,14\ \mu\text{g/m}^3$** (alcanzando $88,22\ \mu\text{g/m}^3$ frente a $92,36\ \mu\text{g/m}^3$ de la referencia). Su diseño en embudo progresivo otorgó la capacidad representacional necesaria en la primera capa para desacoplar correlaciones complejas y condensó representaciones latentes invariantes en la segunda, superando la rigidez del modelo monocapa de 10 neuronas.
+4. **¿Qué cambiaría para mejorar el modelo en trabajos futuros?**  
+   * **Transición a Arquitecturas Recurrentes (LSTM / GRU):** Como sugiere el enunciado, sustituir el perceptrón estático por redes con compuertas de memoria temporal permitiría procesar secuencias dinámicas continuas de longitud arbitraria, eliminando la restricción de usar solo 4 retardos discretos fijos.
+   * **Incorporación de la Dirección del Viento con Codificación One-Hot:** En la estación de Beijing, el viento del noroeste (NW) limpia la atmósfera transportando aire de montaña, mientras que el viento del sureste (SE) arrastra emisiones industriales pesadas de Hebei. Incluir la dirección del viento categórica mediante One-Hot Encoding mejoraría significativamente la predicción de cambios bruscos de régimen.
+   * **Optimización con Algoritmos Adaptativos (Adam / RMSProp):** El descenso de gradiente estándar con $\eta$ constante requiere un balance delicado para no divergir. Un optimizador con momentos adaptativos de primer y segundo orden aceleraría el aprendizaje en zonas de meseta y optimizaría los pesos de variables dispersas.
+   * **Transformación Logarítmica de la Variable Objetivo:** Dado que el PM2.5 presenta una cola asimétrica extrema con picos de hasta $994\ \mu\text{g/m}^3$, transformar la variable con $\log(1 + y)$ antes de normalizar estabilizaría la varianza y reduciría la penalización excesiva del MSE en eventos extremos raros.
