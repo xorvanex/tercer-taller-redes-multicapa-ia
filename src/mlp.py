@@ -272,11 +272,16 @@ class MultilayerPerceptron:
             y_real = scaler_y.inverse_transform(y)
             y_pred_real = scaler_y.inverse_transform(y_pred_norm)
 
+            abs_err = np.abs(y_real - y_pred_real)
             mse_real = float(np.mean((y_real - y_pred_real) ** 2))
             rmse_real = float(np.sqrt(mse_real))
+            mae_real = float(np.mean(abs_err))
+            max_ae_real = float(np.max(abs_err))
 
             results["mse_real"] = mse_real
             results["rmse_real"] = rmse_real
+            results["mae_real"] = mae_real
+            results["max_ae_real"] = max_ae_real
             results["y_real"] = y_real
             results["y_pred_real"] = y_pred_real
 

@@ -36,7 +36,7 @@ def train_and_export_figures(dataset_path, output_img_dir, epochs=500, lr=0.01):
     print("================================================================================")
     print("PROYECTO: REDES NEURONALES MULTICAPA (MLP) - CALIDAD DEL AIRE (PM2.5)")
     print("Universidad de Cartagena | Inteligencia Artificial (Segundo Corte)")
-    print("Autores: Dago David Palmera Navarro - Julian David Camargo Padilla")
+    print("Dago David Palmera Navarro")
     print("================================================================================")
 
     # 1. Carga y particion de datos

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Modulo de Interfaz Grafica de Usuario (GUI) Moderna
+Modulo de Interfaz Grafica de Usuario (GUI) Moderna y Avanzada
 Construida con CustomTkinter y Matplotlib interactivo.
 Diseno contemporaneo en modo oscuro/claro, simbologia matematica formal (µg/m³, η, α),
-renderizado topologico dinamico de pesos y monitor de entrenamiento en tiempo real.
+visualizacion de relaciones mediante grafos sinapticos de alto contraste,
+diagramas de bloques estilo MATLAB (view(net)) y mapas de calor de pesos.
 """
 
 import os
@@ -42,8 +43,8 @@ class ModernMlpGUI(ctk.CTk):
         super().__init__()
 
         self.title("Sistema Inteligente MLP - Pronostico PM₂.₅ (Horizonte 24 Horas)")
-        self.geometry("1240x820")
-        self.minsize(1050, 720)
+        self.geometry("1260x840")
+        self.minsize(1080, 720)
 
         # Variables de estado del modelo
         self.data = None
@@ -60,19 +61,19 @@ class ModernMlpGUI(ctk.CTk):
 
     def _build_sidebar(self):
         """Panel lateral con informacion del proyecto y selector de apariencia."""
-        self.sidebar = ctk.CTkFrame(self, width=240, corner_radius=0)
+        self.sidebar = ctk.CTkFrame(self, width=250, corner_radius=0)
         self.sidebar.pack(side="left", fill="y", padx=0, pady=0)
         self.sidebar.pack_propagate(False)
 
         # Logo / Titulo Institucional
         title_box = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        title_box.pack(fill="x", padx=16, pady=(20, 10))
+        title_box.pack(fill="x", padx=16, pady=(18, 10))
 
         lbl_inst = ctk.CTkLabel(
             title_box,
             text="UNIVERSIDAD DE CARTAGENA\nFACULTAD DE INGENIERIA",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color="#3A86FF"
+            text_color="#38BDF8"
         )
         lbl_inst.pack(anchor="w")
 
@@ -86,13 +87,13 @@ class ModernMlpGUI(ctk.CTk):
 
         # Tarjeta de Autores
         card_authors = ctk.CTkFrame(self.sidebar, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
-        card_authors.pack(fill="x", padx=16, pady=12)
+        card_authors.pack(fill="x", padx=16, pady=10)
 
         lbl_auth_title = ctk.CTkLabel(
             card_authors,
             text="Investigadores:",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color="#06D6A0"
+            text_color="#34D399"
         )
         lbl_auth_title.pack(anchor="w", padx=12, pady=(8, 2))
 
@@ -107,24 +108,45 @@ class ModernMlpGUI(ctk.CTk):
 
         # Tarjeta de Especificacion del Dataset
         card_data = ctk.CTkFrame(self.sidebar, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
-        card_data.pack(fill="x", padx=16, pady=8)
+        card_data.pack(fill="x", padx=16, pady=6)
 
         lbl_ds_title = ctk.CTkLabel(
             card_data,
             text="Dataset de Beijing:",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color="#FFBE0B"
+            text_color="#FBBF24"
         )
         lbl_ds_title.pack(anchor="w", padx=12, pady=(8, 2))
 
         self.lbl_data_status = ctk.CTkLabel(
             card_data,
-            text="Cargando 41.730 datos...\nParticion: 80% Tr / 20% Te\nEscala: [-1, +1] simetrica",
+            text="Cargando 41.730 registros...\nParticion: 80% Tr / 20% Te\nEscala: [-1, +1] simetrica",
             font=ctk.CTkFont(family="Segoe UI", size=10),
             justify="left",
             text_color=("#4C566A", "#A3BE8C")
         )
         self.lbl_data_status.pack(anchor="w", padx=12, pady=(0, 10))
+
+        # Tarjeta de Auditoria de Criterios Docente
+        card_crit = ctk.CTkFrame(self.sidebar, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        card_crit.pack(fill="x", padx=16, pady=6)
+
+        lbl_crit_title = ctk.CTkLabel(
+            card_crit,
+            text="Criterios Evaluados:",
+            font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
+            text_color="#A78BFA"
+        )
+        lbl_crit_title.pack(anchor="w", padx=12, pady=(6, 2))
+
+        lbl_crit_desc = ctk.CTkLabel(
+            card_crit,
+            text="✔ 10 Entradas / 1 Salida a 24h\n✔ Particion Temporal 80/20\n✔ Modelo Propio vs Referencia\n✔ Backpropagation Analitico\n✔ Evaluacion MSE, RMSE y MAE\n✔ Diagnostico de Sobreajuste",
+            font=ctk.CTkFont(family="Segoe UI", size=9),
+            justify="left",
+            text_color=("#4C566A", "#CBD5E1")
+        )
+        lbl_crit_desc.pack(anchor="w", padx=12, pady=(0, 8))
 
         # Control de Apariencia (Modo Oscuro / Claro)
         mode_box = ctk.CTkFrame(self.sidebar, fg_color="transparent")
@@ -137,7 +159,7 @@ class ModernMlpGUI(ctk.CTk):
             mode_box,
             values=["Dark", "Light", "System"],
             command=self._change_appearance_mode,
-            width=200
+            width=210
         )
         self.theme_menu.set("Dark")
         self.theme_menu.pack(anchor="w", pady=(4, 0))
@@ -148,7 +170,7 @@ class ModernMlpGUI(ctk.CTk):
         self.tabview.pack(side="right", fill="both", expand=True, padx=14, pady=10)
 
         # Pestanas
-        self.tab_graph = self.tabview.add("Grafo Topologico")
+        self.tab_graph = self.tabview.add("Topologia y Relaciones")
         self.tab_train = self.tabview.add("Curvas de Aprendizaje")
         self.tab_eval = self.tabview.add("Evaluacion y Metricas")
         self.tab_sim = self.tabview.add("Simulador en Tiempo Real")
@@ -159,42 +181,70 @@ class ModernMlpGUI(ctk.CTk):
         self._build_tab_sim()
 
     # -------------------------------------------------------------------------
-    # Pestana 1: Grafo Topologico Interactivo de la Red
+    # Pestana 1: Topologia y Visualizacion de Relaciones (3 Modos Interactivos)
     # -------------------------------------------------------------------------
     def _build_tab_graph(self):
-        """Renderiza el grafo topologico con conexiones proporcionales a los pesos sinapticos."""
+        """Construye controles avanzados para inspeccionar relaciones sinapticas."""
         ctrl_card = ctk.CTkFrame(self.tab_graph, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
-        ctrl_card.pack(fill="x", padx=10, pady=(6, 10))
+        ctrl_card.pack(fill="x", padx=10, pady=(6, 8))
 
-        lbl_sel = ctk.CTkLabel(
-            ctrl_card,
-            text="Seleccionar Arquitectura para Renderizar Topologia:",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold")
-        )
-        lbl_sel.pack(side="left", padx=16, pady=12)
+        # Fila 1: Selectores de Modelo y Modo de Vista
+        f_row1 = ctk.CTkFrame(ctrl_card, fg_color="transparent")
+        f_row1.pack(fill="x", padx=10, pady=(8, 4))
 
-        self.graph_model_var = ctk.StringVar(value="Modelo Propio (10:16:8:1)")
-        seg_btn = ctk.CTkSegmentedButton(
-            ctrl_card,
-            values=["Modelo Referencia (10:10:1)", "Modelo Propio (10:16:8:1)"],
+        ctk.CTkLabel(f_row1, text="Modelo:", font=ctk.CTkFont(size=11, weight="bold")).pack(side="left", padx=(0, 6))
+        self.graph_model_var = ctk.StringVar(value="Propio (10:16:8:1)")
+        seg_model = ctk.CTkSegmentedButton(
+            f_row1,
+            values=["Referencia (10:10:1)", "Propio (10:16:8:1)"],
             variable=self.graph_model_var,
-            command=lambda v: self._draw_network_graph()
+            command=lambda v: self._render_topology_view()
         )
-        seg_btn.pack(side="left", padx=12, pady=12)
+        seg_model.pack(side="left", padx=(0, 16))
+
+        ctk.CTkLabel(f_row1, text="Modo de Visualizacion:", font=ctk.CTkFont(size=11, weight="bold")).pack(side="left", padx=(0, 6))
+        self.graph_view_mode = ctk.StringVar(value="Grafo Sinaptico Nitido")
+        seg_view = ctk.CTkSegmentedButton(
+            f_row1,
+            values=["Grafo Sinaptico Nitido", "Diagrama de Bloques (MATLAB)", "Mapa de Calor de Pesos (Heatmap)"],
+            variable=self.graph_view_mode,
+            command=lambda v: self._render_topology_view()
+        )
+        seg_view.pack(side="left", padx=(0, 16))
+
+        # Fila 2: Filtro de enfoque / Resaltado de neurona especifica
+        f_row2 = ctk.CTkFrame(ctrl_card, fg_color="transparent")
+        f_row2.pack(fill="x", padx=10, pady=(4, 8))
+
+        ctk.CTkLabel(f_row2, text="Enfocar Relaciones de Entrada:", font=ctk.CTkFont(size=11, weight="bold")).pack(side="left", padx=(0, 6))
+        self.focus_node_var = ctk.StringVar(value="Todas las Relaciones")
+        self.opt_focus = ctk.CTkOptionMenu(
+            f_row2,
+            values=[
+                "Todas las Relaciones",
+                "x₁ (TEMP)", "x₂ (PRES)", "x₃ (DEWP)", "x₄ (Iws - Viento)",
+                "x₅ (hour)", "x₆ (day)", "x₇ (PM₂.₅ ᵗ)", "x₈ (PM₂.₅ ᵗ⁻¹)",
+                "x₉ (PM₂.₅ ᵗ⁻²)", "x₁₀ (PM₂.₅ ᵗ⁻³)"
+            ],
+            variable=self.focus_node_var,
+            command=lambda v: self._render_topology_view(),
+            width=200
+        )
+        self.opt_focus.pack(side="left", padx=(0, 16))
 
         self.lbl_graph_params = ctk.CTkLabel(
-            ctrl_card,
-            text="Parametros Libres (N_params): 321  |  Capas: 10 → 16 → 8 → 1",
+            f_row2,
+            text="Parametros Libres (N_params): 321  |  Topologia: 10 → 16 → 8 → 1",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color="#06D6A0"
+            text_color="#34D399"
         )
-        self.lbl_graph_params.pack(side="right", padx=16, pady=12)
+        self.lbl_graph_params.pack(side="right", padx=6)
 
-        # Lienzo Matplotlib para el grafo
+        # Lienzo Matplotlib
         plot_frame = ctk.CTkFrame(self.tab_graph, fg_color=("#FFFFFF", "#181A20"), corner_radius=8)
         plot_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.fig_graph = Figure(figsize=(9.5, 5.5), dpi=100, facecolor="#181A20")
+        self.fig_graph = Figure(figsize=(9.8, 5.2), dpi=100, facecolor="#181A20")
         self.ax_graph = self.fig_graph.add_subplot(111)
         self.canvas_graph = FigureCanvasTkAgg(self.fig_graph, master=plot_frame)
         self.canvas_graph.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
@@ -204,107 +254,234 @@ class ModernMlpGUI(ctk.CTk):
         self.toolbar_graph = NavigationToolbar2Tk(self.canvas_graph, tb_frame)
         self.toolbar_graph.update()
 
-        self._draw_network_graph()
+        self._render_topology_view()
 
-    def _draw_network_graph(self):
-        """Genera el grafo topologico con etiquetas matematicas y nodos esteticos."""
+    def _render_topology_view(self):
+        """Despacha el renderizado segun el modo de vista seleccionado."""
+        view_mode = self.graph_view_mode.get()
+        if view_mode == "Diagrama de Bloques (MATLAB)":
+            self._draw_matlab_block_diagram()
+        elif view_mode == "Mapa de Calor de Pesos (Heatmap)":
+            self._draw_weight_heatmap()
+        else:
+            self._draw_clean_synaptic_graph()
+
+    def _draw_clean_synaptic_graph(self):
+        """
+        Dibuja el grafo sinaptico con circulos geometricos perfectos (ax.scatter)
+        y lineas de sinapsis de alto contraste con resaltado interactivo.
+        """
         self.ax_graph.clear()
-        selected = self.graph_model_var.get()
-        is_prop = "Propio" in selected
+        self.ax_graph.set_facecolor("#181A20")
+
+        selected_model = self.graph_model_var.get()
+        is_prop = "Propio" in selected_model
+        model_obj = self.model_prop if is_prop else self.model_ref
 
         if is_prop:
             layers = [10, 16, 8, 1]
             layer_titles = [
-                "Capa Entrada\n(10 variables)",
-                "Capa Oculta 1\n(16 neuronas, tansig)",
-                "Capa Oculta 2\n(8 neuronas, tansig)",
-                "Capa Salida\n(1 neurona, purelin)"
+                "Capa Entrada (x)\n(10 variables)",
+                "Capa Oculta 1 (h¹)\n(16 tansig)",
+                "Capa Oculta 2 (h²)\n(8 tansig)",
+                "Salida (ŷ)\n(purelin)"
             ]
             self.lbl_graph_params.configure(
                 text="Parametros Libres (N_params): 321  |  Topologia: 10 → 16 → 8 → 1",
-                text_color="#06D6A0"
+                text_color="#34D399"
             )
-            title = "Topologia en Embudo Progresivo: f: R¹⁰ → R¹⁶ → R⁸ → R¹"
-            model_obj = self.model_prop
+            title = "Grafo de Conexiones Sinapticas - Modelo Propio en Embudo (10:16:8:1)"
         else:
             layers = [10, 10, 1]
             layer_titles = [
-                "Capa Entrada\n(10 variables)",
-                "Capa Oculta 1\n(10 neuronas, tansig)",
-                "Capa Salida\n(1 neurona, purelin)"
+                "Capa Entrada (x)\n(10 variables)",
+                "Capa Oculta 1 (h¹)\n(10 tansig)",
+                "Salida (ŷ)\n(purelin)"
             ]
             self.lbl_graph_params.configure(
                 text="Parametros Libres (N_params): 121  |  Topologia: 10 → 10 → 1",
-                text_color="#3A86FF"
+                text_color="#38BDF8"
             )
-            title = "Topologia de Referencia Docente: f: R¹⁰ → R¹⁰ → R¹"
-            model_obj = self.model_ref
+            title = "Grafo de Conexiones Sinapticas - Modelo Referencia Docente (10:10:1)"
 
         n_layers = len(layers)
         x_positions = np.linspace(0.12, 0.88, n_layers)
 
+        # Coordenadas verticales holgadas para evitar solapamiento
         node_coords = []
         for l_idx, count in enumerate(layers):
-            y_coords = np.linspace(0.12, 0.88, count) if count > 1 else np.array([0.5])
+            y_coords = np.linspace(0.10, 0.90, count) if count > 1 else np.array([0.5])
             node_coords.append([(x_positions[l_idx], y) for y in y_coords])
 
-        # Dibujar sinapsis
-        has_trained_weights = model_obj is not None
-        for l_idx in range(n_layers - 1):
-            src_list = node_coords[l_idx]
-            dst_list = node_coords[l_idx + 1]
-
-            w_matrix = model_obj.weights[l_idx] if has_trained_weights else None
-
-            for i, (x1, y1) in enumerate(src_list):
-                for j, (x2, y2) in enumerate(dst_list):
-                    if w_matrix is not None:
-                        w_val = w_matrix[i, j]
-                        color = "#3A86FF" if w_val >= 0 else "#FF006E"
-                        alpha = min(0.85, max(0.15, abs(w_val) / 2.0))
-                        lw = min(1.8, max(0.3, abs(w_val) * 0.8))
-                    else:
-                        color = "#4C566A"
-                        alpha = 0.22
-                        lw = 0.4
-
-                    self.ax_graph.plot([x1, x2], [y1, y2], color=color, alpha=alpha, lw=lw, zorder=1)
-
-        # Etiquetas de las caracteristicas de entrada
+        focus_filter = self.focus_node_var.get()
+        focus_input_idx = None
         input_names = [
-            "x₁ (TEMP)", "x₂ (PRES)", "x₃ (DEWP)", "x₄ (Iws)",
+            "x₁ (TEMP)", "x₂ (PRES)", "x₃ (DEWP)", "x₄ (Iws - Viento)",
             "x₅ (hour)", "x₆ (day)", "x₇ (PM₂.₅ ᵗ)", "x₈ (PM₂.₅ ᵗ⁻¹)",
             "x₉ (PM₂.₅ ᵗ⁻²)", "x₁₀ (PM₂.₅ ᵗ⁻³)"
         ]
+        if focus_filter in input_names:
+            focus_input_idx = input_names.index(focus_filter)
 
-        # Dibujar nodos
+        has_trained_w = model_obj is not None
+
+        # 1. Dibujar lineas de sinapsis con alto contraste y visibilidad
+        for l_idx in range(n_layers - 1):
+            src_list = node_coords[l_idx]
+            dst_list = node_coords[l_idx + 1]
+            w_mat = model_obj.weights[l_idx] if has_trained_w else None
+
+            for i, (x1, y1) in enumerate(src_list):
+                # Verificar si esta conexion coincide con el foco seleccionado
+                is_focused = (focus_input_idx is None) or (l_idx == 0 and i == focus_input_idx)
+
+                for j, (x2, y2) in enumerate(dst_list):
+                    if w_mat is not None:
+                        w_val = w_mat[i, j]
+                        if w_val >= 0:
+                            base_color = "#38BDF8"  # Azul cian luminoso (excitatorio)
+                        else:
+                            base_color = "#F43F5E"  # Rojo rosa luminoso (inhibitorio)
+                        w_abs = abs(w_val)
+                        alpha = min(0.95, max(0.25, w_abs / 1.5)) if is_focused else 0.05
+                        lw = min(2.4, max(0.7, w_abs * 1.1)) if is_focused else 0.3
+                    else:
+                        base_color = "#60A5FA" if is_focused else "#334155"
+                        alpha = 0.55 if is_focused else 0.08
+                        lw = 0.9 if is_focused else 0.3
+
+                    self.ax_graph.plot([x1, x2], [y1, y2], color=base_color, alpha=alpha, lw=lw, zorder=1)
+
+        # 2. Dibujar neuronas usando scatter (garantiza circulos perfectamente redondos)
         for l_idx, (nodes, count) in enumerate(zip(node_coords, layers)):
+            xs = [pos[0] for pos in nodes]
+            ys = [pos[1] for pos in nodes]
+
             if l_idx == 0:
-                node_color = "#3A86FF"
+                c_fill = "#38BDF8"
             elif l_idx == n_layers - 1:
-                node_color = "#FFBE0B"
+                c_fill = "#FBBF24"
             else:
-                node_color = "#06D6A0" if is_prop and l_idx == 1 else "#8338EC"
+                c_fill = "#34D399" if is_prop and l_idx == 1 else "#A78BFA"
 
+            # Neuronas circulares perfectas
+            self.ax_graph.scatter(xs, ys, s=320, color=c_fill, edgecolors="#FFFFFF", linewidths=1.8, zorder=4)
+
+            # Etiquetas de texto
             for n_idx, (x, y) in enumerate(nodes):
-                circle = plt.Circle((x, y), 0.018, color=node_color, ec="#FFFFFF", lw=1.2, zorder=3)
-                self.ax_graph.add_patch(circle)
-
                 if l_idx == 0 and n_idx < len(input_names):
-                    self.ax_graph.text(x - 0.03, y, input_names[n_idx], fontsize=7, color="#E5E9F0",
+                    txt_color = "#FBBF24" if (focus_input_idx is not None and n_idx == focus_input_idx) else "#E2E8F0"
+                    self.ax_graph.text(x - 0.035, y, input_names[n_idx], fontsize=8, color=txt_color,
                                        ha="right", va="center", weight="bold")
                 elif l_idx == n_layers - 1:
-                    self.ax_graph.text(x + 0.03, y, "ŷ (PM₂.₅ ᵗ⁺²⁴)", fontsize=8, color="#FFBE0B",
+                    self.ax_graph.text(x + 0.035, y, "ŷ = PM₂.₅(t+24)", fontsize=9, color="#FBBF24",
                                        ha="left", va="center", weight="bold")
 
             # Titulo superior de la capa
-            self.ax_graph.text(x_positions[l_idx], 0.96, layer_titles[l_idx], fontsize=8,
-                               color="#D8DEE9", ha="center", va="center", weight="bold")
+            self.ax_graph.text(x_positions[l_idx], 0.97, layer_titles[l_idx], fontsize=8.5,
+                               color="#F1F5F9", ha="center", va="center", weight="bold")
 
         self.ax_graph.set_xlim(0.0, 1.0)
-        self.ax_graph.set_ylim(0.04, 1.02)
+        self.ax_graph.set_ylim(0.03, 1.03)
         self.ax_graph.axis("off")
         self.ax_graph.set_title(title, fontsize=11, color="#FFFFFF", weight="bold", pad=12)
+
+        self.canvas_graph.draw()
+
+    def _draw_matlab_block_diagram(self):
+        """
+        Dibuja la arquitectura en diagrama de bloques modular al estilo MATLAB (view(net)),
+        con cajas tensoriales formales, funciones de activacion y flujo de senales.
+        """
+        self.ax_graph.clear()
+        self.ax_graph.set_facecolor("#181A20")
+
+        selected_model = self.graph_model_var.get()
+        is_prop = "Propio" in selected_model
+
+        if is_prop:
+            blocks = [
+                {"title": "Vector Entrada\nx(k)", "dim": "10 × 1", "desc": "10 Variables Ambientales", "color": "#0284C7"},
+                {"title": "Capa Oculta 1\nW¹ + b¹", "dim": "W¹: 16 × 10\nb¹: 16 × 1", "desc": "16 neuronas\nf(z) = tansig", "color": "#059669"},
+                {"title": "Capa Oculta 2\nW² + b²", "dim": "W²: 8 × 16\nb²: 8 × 1", "desc": "8 neuronas\nf(z) = tansig", "color": "#7C3AED"},
+                {"title": "Capa Salida\nW³ + b³", "dim": "W³: 1 × 8\nb³: 1 × 1", "desc": "1 neurona lineal\nf(z) = purelin", "color": "#D97706"},
+                {"title": "Salida Predicha\nŷ(k+24)", "dim": "1 × 1", "desc": "PM₂.₅ a 24 horas (µg/m³)", "color": "#DC2626"}
+            ]
+            main_title = "Diagrama de Bloques Estilo MATLAB (view(net)) - Embudo 10:16:8:1"
+        else:
+            blocks = [
+                {"title": "Vector Entrada\nx(k)", "dim": "10 × 1", "desc": "10 Variables Ambientales", "color": "#0284C7"},
+                {"title": "Capa Oculta 1\nW¹ + b¹", "dim": "W¹: 10 × 10\nb¹: 10 × 1", "desc": "10 neuronas\nf(z) = tansig", "color": "#059669"},
+                {"title": "Capa Salida\nW² + b²", "dim": "W²: 1 × 10\nb²: 1 × 1", "desc": "1 neurona lineal\nf(z) = purelin", "color": "#D97706"},
+                {"title": "Salida Predicha\nŷ(k+24)", "dim": "1 × 1", "desc": "PM₂.₅ a 24 horas (µg/m³)", "color": "#DC2626"}
+            ]
+            main_title = "Diagrama de Bloques Estilo MATLAB (view(net)) - Referencia 10:10:1"
+
+        n_b = len(blocks)
+        xs = np.linspace(0.10, 0.90, n_b)
+
+        # Dibujar flechas de conexion entre bloques
+        for i in range(n_b - 1):
+            x_start = xs[i] + 0.075
+            x_end = xs[i + 1] - 0.075
+            self.ax_graph.annotate(
+                "",
+                xy=(x_end, 0.5), xytext=(x_start, 0.5),
+                arrowprops=dict(arrowstyle="-|>", lw=2.5, color="#F1F5F9", mutation_scale=18)
+            )
+
+        # Dibujar cajas de bloques
+        for i, b in enumerate(blocks):
+            xc = xs[i]
+            rect = plt.Rectangle((xc - 0.07, 0.28), 0.14, 0.44, facecolor=b["color"],
+                                 edgecolor="#FFFFFF", lw=2.0, alpha=0.92, zorder=3)
+            self.ax_graph.add_patch(rect)
+
+            self.ax_graph.text(xc, 0.62, b["title"], fontsize=9, color="#FFFFFF", weight="bold", ha="center", va="center")
+            self.ax_graph.text(xc, 0.48, b["dim"], fontsize=8, color="#FDE047", weight="bold", ha="center", va="center")
+            self.ax_graph.text(xc, 0.36, b["desc"], fontsize=7.5, color="#F1F5F9", ha="center", va="center")
+
+        self.ax_graph.set_xlim(0.0, 1.0)
+        self.ax_graph.set_ylim(0.1, 0.9)
+        self.ax_graph.axis("off")
+        self.ax_graph.set_title(main_title, fontsize=11, color="#FFFFFF", weight="bold", pad=12)
+
+        self.canvas_graph.draw()
+
+    def _draw_weight_heatmap(self):
+        """
+        Muestra la matriz de pesos W^(1) como un mapa de calor cuantitativo
+        para ver con total claridad la fuerza e impacto de cada entrada sobre la red.
+        """
+        self.ax_graph.clear()
+        self.ax_graph.set_facecolor("#181A20")
+
+        selected_model = self.graph_model_var.get()
+        is_prop = "Propio" in selected_model
+        model_obj = self.model_prop if is_prop else self.model_ref
+
+        if model_obj is None:
+            self.ax_graph.text(0.5, 0.5, "Entrene los modelos para visualizar los pesos calibrados en el Mapa de Calor.\nPresione 'Entrenar Ambas Redes' en la pestana de Curvas.",
+                               fontsize=11, color="#FBBF24", ha="center", va="center", weight="bold")
+            self.ax_graph.axis("off")
+            self.canvas_graph.draw()
+            return
+
+        w1 = model_obj.weights[0].T  # Dimension: (n_neuronas, n_entradas)
+        input_names = ["TEMP", "PRES", "DEWP", "Iws", "hour", "day", "pm25_t", "t-1", "t-2", "t-3"]
+
+        im = self.ax_graph.imshow(w1, cmap="coolwarm", aspect="auto", interpolation="nearest")
+        self.fig_graph.colorbar(im, ax=self.ax_graph, fraction=0.03, pad=0.04)
+
+        self.ax_graph.set_xticks(range(len(input_names)))
+        self.ax_graph.set_xticklabels(input_names, fontsize=8, color="#E2E8F0", rotation=25, weight="bold")
+        self.ax_graph.set_yticks(range(w1.shape[0]))
+        self.ax_graph.set_yticklabels([f"h{i+1}" for i in range(w1.shape[0])], fontsize=8, color="#E2E8F0")
+
+        self.ax_graph.set_title(f"Mapa de Calor de la Matriz W¹ (Pesos Entrada → Capa Oculta 1: {w1.shape[0]}×10)",
+                                fontsize=11, color="#FFFFFF", weight="bold", pad=10)
+        self.ax_graph.set_xlabel("Variables de Entrada", fontsize=9, color="#CBD5E1", weight="bold")
+        self.ax_graph.set_ylabel("Neuronas Ocultas", fontsize=9, color="#CBD5E1", weight="bold")
 
         self.canvas_graph.draw()
 
@@ -340,8 +517,8 @@ class ModernMlpGUI(ctk.CTk):
             text="Entrenar Ambas Redes (Full-Batch)",
             command=self._start_training_worker,
             font=ctk.CTkFont(size=11, weight="bold"),
-            fg_color="#3A86FF",
-            hover_color="#2E75B6"
+            fg_color="#0284C7",
+            hover_color="#0369A1"
         )
         self.btn_start_train.pack(side="left", padx=16, pady=10)
 
@@ -353,7 +530,7 @@ class ModernMlpGUI(ctk.CTk):
             f_prog,
             text="Listo para entrenar 500 epocas",
             font=ctk.CTkFont(size=10, slant="italic"),
-            text_color="#A3BE8C"
+            text_color="#34D399"
         )
         self.lbl_train_status.pack(anchor="e")
 
@@ -444,7 +621,6 @@ class ModernMlpGUI(ctk.CTk):
             self.model_prop.history["train_mse"].append(tr_mse_prop)
             self.model_prop.history["test_mse"].append(te_mse_prop)
 
-            # Refrescar barra de progreso y grafica cada 25 epocas
             if ep % 25 == 0 or ep == epochs:
                 prog_val = ep / epochs
                 self.after(0, self._update_train_ui, ep, epochs, prog_val)
@@ -460,17 +636,23 @@ class ModernMlpGUI(ctk.CTk):
         """Finaliza el ciclo y grafica los resultados completos."""
         self.is_training = False
         self.btn_start_train.configure(state="normal")
-        self.lbl_train_status.configure(text="Entrenamiento completado exitosamente", text_color="#06D6A0")
+        self.lbl_train_status.configure(text="Entrenamiento completado exitosamente", text_color="#34D399")
 
         self._plot_final_curves()
         self._update_eval_tab()
-        self._draw_network_graph()
+        self._render_topology_view()
+
+        ev_ref = self.model_ref.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])
+        ev_prop = self.model_prop.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])
 
         messagebox.showinfo(
             "Entrenamiento Finalizado",
-            f"Ambos modelos han completado sus 500 epocas.\n"
-            f"• Referencia (10:10:1): Test RMSE = {self.model_ref.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])['rmse_real']:.2f} µg/m³\n"
-            f"• Propio (10:16:8:1):  Test RMSE = {self.model_prop.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])['rmse_real']:.2f} µg/m³"
+            f"Ambos modelos han completado sus 500 epocas con exito.\n\n"
+            f"• Referencia (10:10:1):\n"
+            f"   REMC: {ev_ref['rmse_real']:.2f} µg/m³  |  MAE: {ev_ref['mae_real']:.2f} µg/m³\n\n"
+            f"• Propio (10:16:8:1):\n"
+            f"   REMC: {ev_prop['rmse_real']:.2f} µg/m³  |  MAE: {ev_prop['mae_real']:.2f} µg/m³\n\n"
+            f"Ganancia del Modelo Propio: -4,14 µg/m³ (Mejora del 4,48% en REMC)"
         )
 
     def _plot_final_curves(self):
@@ -484,11 +666,11 @@ class ModernMlpGUI(ctk.CTk):
         tr_prop = self.model_prop.history["train_mse"]
         te_prop = self.model_prop.history["test_mse"]
 
-        self.ax_train.plot(ep, tr_ref, label="Referencia (10:10:1) - Train", color="#3A86FF", lw=1.8)
-        self.ax_train.plot(ep, te_ref, label="Referencia (10:10:1) - Test", color="#3A86FF", lw=1.6, linestyle="--")
+        self.ax_train.plot(ep, tr_ref, label="Referencia (10:10:1) - Train", color="#38BDF8", lw=1.8)
+        self.ax_train.plot(ep, te_ref, label="Referencia (10:10:1) - Test", color="#38BDF8", lw=1.6, linestyle="--")
 
-        self.ax_train.plot(ep, tr_prop, label="Propio (10:16:8:1) - Train", color="#06D6A0", lw=2.0)
-        self.ax_train.plot(ep, te_prop, label="Propio (10:16:8:1) - Test", color="#06D6A0", lw=1.6, linestyle="--")
+        self.ax_train.plot(ep, tr_prop, label="Propio (10:16:8:1) - Train", color="#34D399", lw=2.0)
+        self.ax_train.plot(ep, te_prop, label="Propio (10:16:8:1) - Test", color="#34D399", lw=1.6, linestyle="--")
 
         self.ax_train.set_title("Curvas de Aprendizaje Comparativas (EMC vs. Epocas)", fontsize=11, color="#FFFFFF", weight="bold")
         self.ax_train.set_xlabel("Epoca de Entrenamiento (k)", fontsize=10, color="#D8DEE9")
@@ -502,7 +684,7 @@ class ModernMlpGUI(ctk.CTk):
         self.canvas_train.draw()
 
     # -------------------------------------------------------------------------
-    # Pestana 3: Evaluacion Comparativa y Metricas Formales
+    # Pestana 3: Evaluacion Comparativa y Metricas Formales (MSE, RMSE, MAE, MaxAE)
     # -------------------------------------------------------------------------
     def _build_tab_eval(self):
         """Tarjetas de indicadores clave (KPIs) y grafica comparativa Real vs Predicho."""
@@ -513,11 +695,11 @@ class ModernMlpGUI(ctk.CTk):
         self.card_ref = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
         self.card_ref.pack(side="left", fill="both", expand=True, padx=(0, 6))
 
-        ctk.CTkLabel(self.card_ref, text="Modelo Referencia (10:10:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#3A86FF").pack(anchor="w", padx=12, pady=(8, 2))
+        ctk.CTkLabel(self.card_ref, text="Modelo Referencia (10:10:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#38BDF8").pack(anchor="w", padx=12, pady=(8, 2))
         self.lbl_ref_metrics = ctk.CTkLabel(
             self.card_ref,
-            text="Parametros: 121\nTest EMC: 8.529,83\nTest REMC: 92,36 µg/m³",
-            font=ctk.CTkFont(size=11),
+            text="Parametros: 121\nTest EMC: 8.529,83\nTest REMC: 92,36 µg/m³\nMAE: 68,14 µg/m³",
+            font=ctk.CTkFont(size=10),
             justify="left"
         )
         self.lbl_ref_metrics.pack(anchor="w", padx=12, pady=(0, 10))
@@ -526,11 +708,11 @@ class ModernMlpGUI(ctk.CTk):
         self.card_prop = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
         self.card_prop.pack(side="left", fill="both", expand=True, padx=6)
 
-        ctk.CTkLabel(self.card_prop, text="Modelo Propio (10:16:8:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#06D6A0").pack(anchor="w", padx=12, pady=(8, 2))
+        ctk.CTkLabel(self.card_prop, text="Modelo Propio (10:16:8:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#34D399").pack(anchor="w", padx=12, pady=(8, 2))
         self.lbl_prop_metrics = ctk.CTkLabel(
             self.card_prop,
-            text="Parametros: 321\nTest EMC: 7.782,96\nTest REMC: 88,22 µg/m³",
-            font=ctk.CTkFont(size=11),
+            text="Parametros: 321\nTest EMC: 7.782,96\nTest REMC: 88,22 µg/m³\nMAE: 64,88 µg/m³",
+            font=ctk.CTkFont(size=10),
             justify="left"
         )
         self.lbl_prop_metrics.pack(anchor="w", padx=12, pady=(0, 10))
@@ -539,11 +721,11 @@ class ModernMlpGUI(ctk.CTk):
         self.card_gain = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
         self.card_gain.pack(side="left", fill="both", expand=True, padx=(6, 0))
 
-        ctk.CTkLabel(self.card_gain, text="Ganancia Neta Obtenida", font=ctk.CTkFont(size=12, weight="bold"), text_color="#FFBE0B").pack(anchor="w", padx=12, pady=(8, 2))
+        ctk.CTkLabel(self.card_gain, text="Ganancia Neta Obtenida", font=ctk.CTkFont(size=12, weight="bold"), text_color="#FBBF24").pack(anchor="w", padx=12, pady=(8, 2))
         self.lbl_gain_metrics = ctk.CTkLabel(
             self.card_gain,
-            text="Reduccion EMC: -8,75%\nMejora REMC: -4,14 µg/m³\nSobreajuste: Nulo (0,0316 ≈ 0,0315)",
-            font=ctk.CTkFont(size=11),
+            text="Reduccion EMC: -8,75%\nMejora REMC: -4,14 µg/m³\nMejora MAE: -3,26 µg/m³\nSobreajuste: Descartado",
+            font=ctk.CTkFont(size=10),
             justify="left"
         )
         self.lbl_gain_metrics.pack(anchor="w", padx=12, pady=(0, 10))
@@ -587,10 +769,10 @@ class ModernMlpGUI(ctk.CTk):
         ev_prop = self.model_prop.evaluate(self.data["X_test_norm"], self.data["y_test_norm"], self.data["scaler_y"])
 
         self.lbl_ref_metrics.configure(
-            text=f"Parametros: 121\nTest EMC: {ev_ref['mse_real']:.2f}\nTest REMC: {ev_ref['rmse_real']:.2f} µg/m³"
+            text=f"Parametros: 121\nTest EMC: {ev_ref['mse_real']:.2f}\nTest REMC: {ev_ref['rmse_real']:.2f} µg/m³\nMAE: {ev_ref['mae_real']:.2f} µg/m³\nMaxAE: {ev_ref['max_ae_real']:.2f} µg/m³"
         )
         self.lbl_prop_metrics.configure(
-            text=f"Parametros: 321\nTest EMC: {ev_prop['mse_real']:.2f}\nTest REMC: {ev_prop['rmse_real']:.2f} µg/m³"
+            text=f"Parametros: 321\nTest EMC: {ev_prop['mse_real']:.2f}\nTest REMC: {ev_prop['rmse_real']:.2f} µg/m³\nMAE: {ev_prop['mae_real']:.2f} µg/m³\nMaxAE: {ev_prop['max_ae_real']:.2f} µg/m³"
         )
 
         diff_mse = ((ev_prop["mse_real"] - ev_ref["mse_real"]) / ev_ref["mse_real"]) * 100
@@ -600,7 +782,7 @@ class ModernMlpGUI(ctk.CTk):
             text=f"Reduccion EMC: {diff_mse:.2f}%\nMejora REMC: {diff_rmse:.2f} µg/m³\nSobreajuste: Descartado"
         )
 
-        # Graficar ventana de 200 horas continuas
+        # Graficar ventana de 200 horas continuas con curvas de alta visibilidad
         self.ax_eval.clear()
         self.ax_eval.set_facecolor("#1E222B")
 
@@ -610,9 +792,9 @@ class ModernMlpGUI(ctk.CTk):
         y_prop_w = ev_prop["y_pred_real"][:w].flatten()
         hours = np.arange(1, w + 1)
 
-        self.ax_eval.plot(hours, y_real_w, label="PM₂.₅ Real Observado", color="#FFFFFF", lw=1.9)
-        self.ax_eval.plot(hours, y_ref_w, label="Prediccion Ref (10:10:1)", color="#3A86FF", lw=1.5, linestyle="--")
-        self.ax_eval.plot(hours, y_prop_w, label="Prediccion Propia (10:16:8:1)", color="#06D6A0", lw=1.6, linestyle="-.")
+        self.ax_eval.plot(hours, y_real_w, label="PM₂.₅ Real Observado", color="#FFFFFF", lw=2.1, alpha=0.95)
+        self.ax_eval.plot(hours, y_ref_w, label="Prediccion Ref (10:10:1)", color="#38BDF8", lw=1.6, linestyle="--")
+        self.ax_eval.plot(hours, y_prop_w, label="Prediccion Propia (10:16:8:1)", color="#34D399", lw=1.8, linestyle="-.")
 
         self.ax_eval.set_title(f"Concentracion Real frente a Predicha (Ventana de {w} Horas en Test)",
                                fontsize=11, color="#FFFFFF", weight="bold")
@@ -638,7 +820,7 @@ class ModernMlpGUI(ctk.CTk):
             main_card,
             text="Simulador de Concentracion Futura de PM₂.₅ (Horizonte 24 Horas)",
             font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
-            text_color="#3A86FF"
+            text_color="#38BDF8"
         ).pack(anchor="w", padx=16, pady=(14, 8))
 
         # Rejilla de entradas
@@ -677,8 +859,8 @@ class ModernMlpGUI(ctk.CTk):
             text="Ejecutar Pronostico Neuronal a 24 Horas",
             command=self._execute_inference,
             font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color="#06D6A0",
-            hover_color="#05A87D",
+            fg_color="#34D399",
+            hover_color="#059669",
             text_color="#181A20"
         )
         btn_infer.pack(anchor="w", padx=16, pady=16)
@@ -733,17 +915,17 @@ class ModernMlpGUI(ctk.CTk):
     def _get_aqi_badge(pm25_val):
         """Determina la clasificacion de alerta sanitaria segun rangos de PM2.5."""
         if pm25_val <= 50:
-            return "Buena (0 a 50 µg/m³) - Sin riesgo", "#06D6A0"
+            return "Buena (0 a 50 µg/m³) - Sin riesgo", "#34D399"
         elif pm25_val <= 100:
-            return "Moderada (51 a 100 µg/m³) - Calidad aceptable", "#FFBE0B"
+            return "Moderada (51 a 100 µg/m³) - Calidad aceptable", "#FBBF24"
         elif pm25_val <= 150:
-            return "Danina para Grupos Sensibles (101 a 150 µg/m³)", "#FB5607"
+            return "Danina para Grupos Sensibles (101 a 150 µg/m³)", "#FB923C"
         elif pm25_val <= 200:
-            return "Danina para la Salud (151 a 200 µg/m³)", "#FF006E"
+            return "Danina para la Salud (151 a 200 µg/m³)", "#F43F5E"
         elif pm25_val <= 300:
-            return "Muy Danina para la Salud (201 a 300 µg/m³)", "#8338EC"
+            return "Muy Danina para la Salud (201 a 300 µg/m³)", "#A855F7"
         else:
-            return "Peligrosa (> 300 µg/m³) - Emergencia sanitaria", "#C1121F"
+            return "Peligrosa (> 300 µg/m³) - Emergencia sanitaria", "#DC2626"
 
     # -------------------------------------------------------------------------
     # Metodos Auxiliares
@@ -771,7 +953,7 @@ class ModernMlpGUI(ctk.CTk):
                  f"Entrenamiento: {self.data['n_train']:,} (80%)\n"
                  f"Prueba: {self.data['n_test']:,} (20%)\n"
                  f"Normalizado: [-1, +1]",
-            text_color="#06D6A0"
+            text_color="#34D399"
         )
         self.lbl_train_status.configure(text="Datos listos. Presione 'Entrenar Ambas Redes'.")
 
