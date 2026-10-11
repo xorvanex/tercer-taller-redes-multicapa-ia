@@ -2,7 +2,7 @@
 """
 Punto de Entrada Principal (Main)
 Permite la ejecucion del proyecto en modo Interfaz Grafica (GUI) o en modo
-Consola (CLI) con exportacion automatica de graficas y metricas para el informe.
+Consola (CLI) con exportacion automatica de graficas y metricas
 """
 
 import os

@@ -149,17 +149,6 @@ class ModernMlpGUI(ctk.CTk):
         )
         lbl_crit_desc.pack(anchor="w", padx=12, pady=(0, 8))
 
-        # Indicador de Modo Oscuro Permanente
-        mode_box = ctk.CTkFrame(self.sidebar, fg_color="#1A1D24", corner_radius=6)
-        mode_box.pack(side="bottom", fill="x", padx=16, pady=16)
-
-        lbl_theme = ctk.CTkLabel(
-            mode_box,
-            text="Tema: Modo Oscuro Exclusivo",
-            font=ctk.CTkFont(size=10, weight="bold"),
-            text_color="#94A3B8"
-        )
-        lbl_theme.pack(padx=10, pady=8)
 
     def _build_main_container(self):
         """Contenedor de pestanas principales estilo dashboard."""
@@ -269,6 +258,19 @@ class ModernMlpGUI(ctk.CTk):
         Limpia completamente la figura y despacha el renderizado.
         El uso estricto de clf() elimina cualquier eje de colorbar residual evitando acumulaciones.
         """
+        selected_model = self.graph_model_var.get()
+        is_prop = "Propio" in selected_model
+        if is_prop:
+            self.lbl_graph_params.configure(
+                text="Parametros Libres (N_params): 321  |  Topologia: 10 → 16 → 8 → 1",
+                text_color="#34D399"
+            )
+        else:
+            self.lbl_graph_params.configure(
+                text="Parametros Libres (N_params): 121  |  Topologia: 10 → 10 → 1",
+                text_color="#38BDF8"
+            )
+
         self.fig_graph.clf()
         self.ax_graph = self.fig_graph.add_subplot(111)
 
@@ -541,11 +543,29 @@ class ModernMlpGUI(ctk.CTk):
         self.prog_bar.set(0.0)
         self.prog_bar.pack(anchor="e", pady=(4, 0))
 
+        # Tarjeta explicativa de hiperparametros y terminologia
+        guide_card = ctk.CTkFrame(self.tab_train, fg_color="#181B22", corner_radius=8, border_width=1, border_color="#334155")
+        guide_card.pack(fill="x", padx=10, pady=(0, 6))
+
+        lbl_guide = ctk.CTkLabel(
+            guide_card,
+            text=(
+                "• Epocas (k): Cantidad de pasadas completas del algoritmo sobre las 33.384 muestras de entrenamiento.\n"
+                "• Tasa de Aprendizaje (η - eta): Coeficiente que modula la amplitud de los pasos del descenso de gradiente (W ← W - η·∇W). Tasa recomendada: 0,005 a 0,02.\n"
+                "• Coeficiente de Momento (α - alpha): Fraccion de velocidad acumulada de la epoca anterior (V ← α·V + η·∇W). Amortigua oscilaciones y acelera el paso por mesetas.\n"
+                "• PM₂.₅ en µg/m³: Concentracion fisica de microgramos por metro cubico de material particulado fino (diametro ≤ 2,5 µm)."
+            ),
+            font=ctk.CTkFont(size=10),
+            justify="left",
+            text_color="#CBD5E1"
+        )
+        lbl_guide.pack(anchor="w", padx=12, pady=6)
+
         # Lienzo Matplotlib para curvas de aprendizaje
         plot_frame = ctk.CTkFrame(self.tab_train, fg_color="#181A20", corner_radius=8)
         plot_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.fig_train = Figure(figsize=(9.5, 5.0), dpi=100, facecolor="#181A20")
+        self.fig_train = Figure(figsize=(9.5, 4.6), dpi=100, facecolor="#181A20")
         self.ax_train = self.fig_train.add_subplot(111)
         self.canvas_train = FigureCanvasTkAgg(self.fig_train, master=plot_frame)
         self.canvas_train.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
@@ -556,6 +576,15 @@ class ModernMlpGUI(ctk.CTk):
         self.toolbar_train.update()
 
         self._init_train_plot()
+
+    @staticmethod
+    def _fmt(val):
+        """Formatea valores numericos con maximo 2 decimales y proteccion ante desbordamientos."""
+        if val is None or np.isnan(val) or np.isinf(val):
+            return "Inestable"
+        if val > 99999.0:
+            return f"{val:.2e}"
+        return f"{val:,.2f}"
 
     def _init_train_plot(self):
         """Configura el lienzo de curvas de aprendizaje con estilo contemporaneo."""
@@ -648,14 +677,23 @@ class ModernMlpGUI(ctk.CTk):
         ev_ref = self.model_ref.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])
         ev_prop = self.model_prop.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])
 
+        ep_count = len(self.model_ref.history["epoch"])
+        diff_rmse = ev_prop["rmse_real"] - ev_ref["rmse_real"]
+        pct_rmse = ((ev_ref["rmse_real"] - ev_prop["rmse_real"]) / ev_ref["rmse_real"]) * 100 if ev_ref["rmse_real"] > 0 else 0.0
+
+        if diff_rmse < 0:
+            conclusion = f"Ganancia Modelo Propio: {abs(diff_rmse):.2f} µg/m³ menos de error (Mejora del {pct_rmse:.2f}% en REMC)"
+        else:
+            conclusion = f"Diferencia Modelo Propio: {diff_rmse:+.2f} µg/m³ frente a referencia ({pct_rmse:+.2f}% de variacion)"
+
         messagebox.showinfo(
             "Entrenamiento Finalizado",
-            f"Ambos modelos han completado sus 500 epocas con exito.\n\n"
+            f"Ambos modelos han completado sus {ep_count} epocas con exito.\n\n"
             f"• Referencia (10:10:1):\n"
-            f"   REMC: {ev_ref['rmse_real']:.2f} µg/m³  |  MAE: {ev_ref['mae_real']:.2f} µg/m³\n\n"
+            f"   REMC: {self._fmt(ev_ref['rmse_real'])} µg/m³  |  MAE: {self._fmt(ev_ref['mae_real'])} µg/m³\n\n"
             f"• Propio (10:16:8:1):\n"
-            f"   REMC: {ev_prop['rmse_real']:.2f} µg/m³  |  MAE: {ev_prop['mae_real']:.2f} µg/m³\n\n"
-            f"Ganancia del Modelo Propio: -4,14 µg/m³ (Mejora del 4,48% en REMC)"
+            f"   REMC: {self._fmt(ev_prop['rmse_real'])} µg/m³  |  MAE: {self._fmt(ev_prop['mae_real'])} µg/m³\n\n"
+            f"{conclusion}"
         )
 
     def _plot_final_curves(self):
@@ -796,19 +834,21 @@ class ModernMlpGUI(ctk.CTk):
 
         ev_ref = self.model_ref.evaluate(self.data["X_test_norm"], self.data["y_test_norm"], self.data["scaler_y"])
         ev_prop = self.model_prop.evaluate(self.data["X_test_norm"], self.data["y_test_norm"], self.data["scaler_y"])
+        ep_count = len(self.model_ref.history["epoch"])
 
         self.lbl_ref_metrics.configure(
-            text=f"Parametros: 121\nTest EMC: {ev_ref['mse_real']:.2f}\nTest REMC: {ev_ref['rmse_real']:.2f} µg/m³\nMAE: {ev_ref['mae_real']:.2f} µg/m³\nMaxAE: {ev_ref['max_ae_real']:.2f} µg/m³"
+            text=f"Parametros: 121\nTest EMC: {self._fmt(ev_ref['mse_real'])}\nTest REMC: {self._fmt(ev_ref['rmse_real'])} µg/m³\nMAE: {self._fmt(ev_ref['mae_real'])} µg/m³\nMaxAE: {self._fmt(ev_ref['max_ae_real'])} µg/m³"
         )
         self.lbl_prop_metrics.configure(
-            text=f"Parametros: 321\nTest EMC: {ev_prop['mse_real']:.2f}\nTest REMC: {ev_prop['rmse_real']:.2f} µg/m³\nMAE: {ev_prop['mae_real']:.2f} µg/m³\nMaxAE: {ev_prop['max_ae_real']:.2f} µg/m³"
+            text=f"Parametros: 321\nTest EMC: {self._fmt(ev_prop['mse_real'])}\nTest REMC: {self._fmt(ev_prop['rmse_real'])} µg/m³\nMAE: {self._fmt(ev_prop['mae_real'])} µg/m³\nMaxAE: {self._fmt(ev_prop['max_ae_real'])} µg/m³"
         )
 
-        diff_mse = ((ev_prop["mse_real"] - ev_ref["mse_real"]) / ev_ref["mse_real"]) * 100
+        diff_mse = ((ev_prop["mse_real"] - ev_ref["mse_real"]) / ev_ref["mse_real"]) * 100 if ev_ref["mse_real"] > 0 else 0.0
         diff_rmse = ev_prop["rmse_real"] - ev_ref["rmse_real"]
+        diff_mae = ev_prop["mae_real"] - ev_ref["mae_real"]
 
         self.lbl_gain_metrics.configure(
-            text=f"Reduccion EMC: {diff_mse:.2f}%\nMejora REMC: {diff_rmse:.2f} µg/m³\nSobreajuste: Descartado"
+            text=f"Diferencia EMC: {diff_mse:+.2f}%\nDiferencia REMC: {diff_rmse:+.2f} µg/m³\nDiferencia MAE: {diff_mae:+.2f} µg/m³\nEpocas Evaluadas: {ep_count}"
         )
 
         # Graficar ventana de 200 horas continuas con curvas de alta visibilidad
@@ -1056,7 +1096,10 @@ class ModernMlpGUI(ctk.CTk):
         csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "datasets", "dataset_pm25.csv"))
         if os.path.exists(csv_path):
             self.data = load_and_preprocess_dataset(csv_path)
-            self.after(0, self._on_dataset_ready)
+            try:
+                self.after(0, self._on_dataset_ready)
+            except (RuntimeError, tk.TclError):
+                pass
 
     def _on_dataset_ready(self):
         """Notifica que el dataset fue cargado exitosamente."""

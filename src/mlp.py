@@ -159,6 +159,11 @@ class MultilayerPerceptron:
             grad_w[i] = activations[i].T @ current_delta
             grad_b[i] = np.sum(current_delta, axis=0, keepdims=True)
 
+        # Gradient clipping para prevenir explosion numerica ante hiperparametros extremos
+        for i in range(self.num_layers):
+            np.clip(grad_w[i], -10.0, 10.0, out=grad_w[i])
+            np.clip(grad_b[i], -10.0, 10.0, out=grad_b[i])
+
         return grad_w, grad_b
 
     def train_epoch(self, X_train, y_train):
@@ -244,6 +249,8 @@ class MultilayerPerceptron:
                 current_a = self._tansig(z)
             else:
                 current_a = self._purelin(z)
+        # Limitar numericamente la salida para evitar divergencia extrema
+        current_a = np.clip(current_a, -10.0, 10.0)
         return current_a
 
     def evaluate(self, X, y, scaler_y=None):
@@ -271,6 +278,10 @@ class MultilayerPerceptron:
         if scaler_y is not None:
             y_real = scaler_y.inverse_transform(y)
             y_pred_real = scaler_y.inverse_transform(y_pred_norm)
+
+            # Acotar a limites fisicos reales de concentracion de PM2.5 [0.0, 1000.0] µg/m³
+            # evitando que hiperparametros inestables generen numeros astronomicos
+            y_pred_real = np.clip(y_pred_real, 0.0, 1000.0)
 
             abs_err = np.abs(y_real - y_pred_real)
             mse_real = float(np.mean((y_real - y_pred_real) ** 2))
