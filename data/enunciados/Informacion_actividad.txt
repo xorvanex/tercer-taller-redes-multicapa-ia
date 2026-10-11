@@ -1,0 +1,71 @@
+# Actividad Evaluativa: Redes Neuronales Multicapa (MLP)
+
+**Docente:** Manuel Alejandro Ospina Alarcón
+**Valor:** 8 puntos
+**Fecha de Publicación:** Miércoles 07 de octubre de 2026, 14:39
+**Fecha de Entrega:** Viernes 16 de octubre de 2026, 11:59 p. m.
+**Modalidad:** Individual (o grupos de máximo 2 personas)
+
+---
+
+## Publicación Oficial en Google Classroom
+
+Cordial saludo
+
+Según lo conversado ayer en clase, se adjunta la segunda actividad evaluativa del corte 2 del curso.
+Recuerde que es en grupos de máximo 2 personas.
+Tienen hasta el viernes 16 de octubre a las 11:59 pm para hacer la entrega. A la hora de entregar verifique muy bien todo. Si no entrega ese día se asume una nota de cero.
+Para esta actividad se dispondrá de un horario de tutoría (la sesiones del jueves 8 octubre y martes 13 de octubre (presencial)) además se da el espacio para que ustedes terminen esta actividad referente a Redes neuronales multicapa bien y sin ningún pretexto. Recuerden que el examen es el próximo jueves 15 de octubre (corte 2). Les recuerdo también el compromiso de entregar todas las actividades en las fechas programadas.
+
+Feliz semana para todos.
+
+### Criterios de evaluación
+* Definición correcta de entradas y salida del sistema
+* Propuesta razonada de una configuración propia de red MLP
+* Implementación técnica del script para entrenamiento y simulación
+* Comparación entre arquitecturas (propia vs sugerida)
+* Interpretación de resultados y análisis del error
+* Conclusiones y recomendaciones basadas en los experimentos.
+
+Recuerden que una red neuronal, no es una caja mágica, sino un modelo que se debe justificar, entrenar, validar y explicar con precisión.
+
+---
+
+## Resumen del Documento Guía (`Actividad RNA (MLP).docx`)
+
+**Tema:** Predicción de PM2.5 a 24 horas mediante Redes Neuronales Multicapa.
+
+### 1. Contexto del Problema
+Se dispone de datos históricos de calidad del aire y variables meteorológicas. El objetivo es predecir la concentración de PM2.5 a 24 horas, utilizando una red neuronal multicapa (MLP, RNN o LSTM).
+Este problema es multivariable, tiene ruido, tiene dependencia temporal y puede inducir errores de modelado.
+
+### 2. Dataset
+Versión preprocesada de: Beijing PM2.5 Dataset (`dataset_pm25.csv`).
+Variables incluidas:
+* `pm25_t`: PM2.5 actual
+* `pm25_t-1`, `pm25_t-2`, `pm25_t-3`: Historial temporal (regresores autorregresivos)
+* `TEMP`: Temperatura
+* `PRES`: Presión atmosférica
+* `DEWP`: Punto de rocío
+* `Iws`: Velocidad acumulada del viento
+* `hour`: Hora del día (0–23)
+* `day`: Día del año
+* **Variable objetivo:** `pm25_t+24` (concentración de PM2.5 a 24 horas hacia adelante)
+
+### 3. Actividades a Desarrollar
+* **3.1 Definición del problema:** Identificar variables de entrada, salida y justificar selección.
+* **3.2 Preparación de datos:** Partición entrenamiento/prueba, normalización explicada y verificación de consistencia.
+* **3.3 Diseño del modelo:** Propuesta de arquitectura propia vs arquitectura de comparación (ej: Modelo 1: 8:10:1; Modelo 2: 8:20:10:1).
+* **3.4 Entrenamiento:** Implementación de MLP con backpropagation, ajuste de hiperparámetros (neuronas, épocas, tasa de aprendizaje $\eta$).
+* **3.5 Evaluación:** Métricas MSE y RMSE; gráficos de predicción vs valor real y evolución de la curva de aprendizaje/error.
+* **3.6 Análisis:** Relevancia de variables, sobreajuste vs generalización, comparación entre arquitecturas y propuestas de mejora.
+
+### 4. Entregables
+1. Código funcional reproducible.
+2. Dataset utilizado (`dataset_pm25.csv`).
+3. Informe técnico formal en PDF (Definición, Preparación, Modelo, Resultados y Análisis crítico).
+
+### 5. Restricciones
+* No usar notebooks prehechos sin explicación.
+* No entregar código sin entenderlo.
+* No copiar análisis.

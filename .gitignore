@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter / Google Colab Checkpoints
+.ipynb_checkpoints/
+
+# Microsoft Office Temporary Lock Files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+.~lock.*
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs & Temp
+*.log
+*.tmp
+tmp/
+.obsidian/
