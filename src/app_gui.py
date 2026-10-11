@@ -128,25 +128,6 @@ class ModernMlpGUI(ctk.CTk):
         )
         self.lbl_data_status.pack(anchor="w", padx=12, pady=(0, 10))
 
-        # Tarjeta de Auditoria de Criterios Docente
-        card_crit = ctk.CTkFrame(self.sidebar, fg_color="#1E222B", corner_radius=8)
-        card_crit.pack(fill="x", padx=16, pady=6)
-
-        lbl_crit_title = ctk.CTkLabel(
-            card_crit,
-            text="Criterios Evaluados:",
-            font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
-            text_color="#A78BFA"
-        )
-        lbl_crit_title.pack(anchor="w", padx=12, pady=(6, 2))
-
-        lbl_crit_desc = ctk.CTkLabel(
-            card_crit,
-            text="✔ 10 Entradas / 1 Salida a 24h\n✔ Particion Temporal 80/20\n✔ Modelo Propio vs Referencia\n✔ Backpropagation Analitico\n✔ Evaluacion MSE, RMSE y MAE\n✔ Diagnostico de Sobreajuste",
-            font=ctk.CTkFont(family="Segoe UI", size=9),
-            justify="left",
-            text_color="#CBD5E1"
-        )
         # Boton universal para restablecer y limpiar la interfaz
         self.btn_reset_all = ctk.CTkButton(
             self.sidebar,
