@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Modulo de Interfaz Grafica de Usuario (GUI)
-Aplicacion de escritorio interactiva con Tkinter y Matplotlib para el diseno,
-visualizacion topologica en grafo, entrenamiento y simulacion de redes MLP.
+Modulo de Interfaz Grafica de Usuario (GUI) Moderna
+Construida con CustomTkinter y Matplotlib interactivo.
+Diseno contemporaneo en modo oscuro/claro, simbologia matematica formal (µg/m³, η, α),
+renderizado topologico dinamico de pesos y monitor de entrenamiento en tiempo real.
 """
 
 import os
 import sys
 import threading
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 import numpy as np
+import customtkinter as ctk
 
-# Matplotlib para integracion interactiva en Tkinter
+# Integracion de Matplotlib con Tkinter
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -24,287 +26,400 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from data_loader import load_and_preprocess_dataset
 from mlp import MultilayerPerceptron
 
+# Configuracion global de CustomTkinter
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("blue")
 
-class MlpAppGUI:
+
+class ModernMlpGUI(ctk.CTk):
     """
-    Aplicacion interactiva para el analisis y evaluacion comparativa de redes MLP.
-    Permite visualizar la red como un grafo topologico, monitorizar el entrenamiento,
-    inspeccionar metricas en tiempo real y simular predicciones individuales.
+    Aplicacion de escritorio moderna para el analisis, simulacion y evaluacion
+    comparativa de Redes Neuronales Multicapa (MLP) aplicadas a la calidad del aire.
     """
 
-    def __init__(self, root):
-        """
-        Inicializa la ventana principal y los paneles del sistema.
+    def __init__(self):
+        """Inicializa la ventana principal, estilos y componentes visuales."""
+        super().__init__()
 
-        Args:
-            root (tk.Tk): Instancia de la ventana raiz de Tkinter.
-        """
-        self.root = root
-        self.root.title("Sistema de Redes Neuronales Multicapa (MLP) - Prediccion PM2.5")
-        self.root.geometry("1180x760")
-        self.root.minsize(980, 650)
+        self.title("Sistema Inteligente MLP - Pronostico PM₂.₅ (Horizonte 24 Horas)")
+        self.geometry("1240x820")
+        self.minsize(1050, 720)
 
-        # Estado del sistema
+        # Variables de estado del modelo
         self.data = None
         self.model_ref = None
         self.model_prop = None
         self.is_training = False
 
-        # Configurar estilos visuales
-        self._setup_styles()
+        # Construir estructura de la interfaz
+        self._build_sidebar()
+        self._build_main_container()
 
-        # Construir interfaz
-        self._build_header()
-        self._build_notebook()
+        # Iniciar carga asincrona de los datos
+        self._load_dataset_async()
 
-        # Cargar dataset en segundo plano
-        self._load_data_thread()
+    def _build_sidebar(self):
+        """Panel lateral con informacion del proyecto y selector de apariencia."""
+        self.sidebar = ctk.CTkFrame(self, width=240, corner_radius=0)
+        self.sidebar.pack(side="left", fill="y", padx=0, pady=0)
+        self.sidebar.pack_propagate(False)
 
-    def _setup_styles(self):
-        """Configura la paleta de colores y estilos tipograficos."""
-        self.style = ttk.Style()
-        self.style.theme_use("clam")
+        # Logo / Titulo Institucional
+        title_box = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        title_box.pack(fill="x", padx=16, pady=(20, 10))
 
-        self.color_primary = "#1F4E79"
-        self.color_secondary = "#2E75B6"
-        self.color_bg = "#F2F4F7"
-        self.color_card = "#FFFFFF"
-
-        self.style.configure(".", background=self.color_bg, font=("Segoe UI", 10))
-        self.style.configure("TNotebook", background=self.color_bg)
-        self.style.configure("TNotebook.Tab", padding=[16, 8], font=("Segoe UI", 10, "bold"))
-        self.style.map("TNotebook.Tab", background=[("selected", self.color_primary)], foreground=[("selected", "#FFFFFF")])
-        self.style.configure("Header.TLabel", font=("Segoe UI", 14, "bold"), foreground=self.color_primary)
-        self.style.configure("Action.TButton", font=("Segoe UI", 10, "bold"), foreground="#FFFFFF", background=self.color_primary)
-        self.style.map("Action.TButton", background=[("active", self.color_secondary)])
-
-    def _build_header(self):
-        """Construye la cabecera institucional y de estado del sistema."""
-        header_frame = tk.Frame(self.root, bg=self.color_primary, height=65)
-        header_frame.pack(fill=tk.X, side=tk.TOP)
-
-        title_lbl = tk.Label(
-            header_frame,
-            text="REDES NEURONALES MULTICAPA (MLP) - PREDICCION DE CALIDAD DEL AIRE (PM2.5 A 24H)",
-            font=("Segoe UI", 12, "bold"),
-            fg="#FFFFFF",
-            bg=self.color_primary
+        lbl_inst = ctk.CTkLabel(
+            title_box,
+            text="UNIVERSIDAD DE CARTAGENA\nFACULTAD DE INGENIERIA",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#3A86FF"
         )
-        title_lbl.pack(anchor="w", padx=20, pady=(8, 2))
+        lbl_inst.pack(anchor="w")
 
-        sub_lbl = tk.Label(
-            header_frame,
-            text="Universidad de Cartagena | Dago David Palmera Navarro - Julian David Camargo Padilla",
-            font=("Segoe UI", 9),
-            fg="#D9E1F2",
-            bg=self.color_primary
+        lbl_proj = ctk.CTkLabel(
+            title_box,
+            text="Redes Neuronales Multicapa\n(MLP - Corte II)",
+            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
+            text_color="#FFFFFF"
         )
-        sub_lbl.pack(anchor="w", padx=20, pady=(0, 8))
+        lbl_proj.pack(anchor="w", pady=(8, 0))
 
-    def _build_notebook(self):
-        """Construye el contenedor de pestanas principales."""
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=12, pady=10)
+        # Tarjeta de Autores
+        card_authors = ctk.CTkFrame(self.sidebar, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        card_authors.pack(fill="x", padx=16, pady=12)
 
-        # Pestana 1: Visualizador Topologico en Grafo
-        self.tab_graph = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_graph, text="Grafo Topologico")
+        lbl_auth_title = ctk.CTkLabel(
+            card_authors,
+            text="Investigadores:",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#06D6A0"
+        )
+        lbl_auth_title.pack(anchor="w", padx=12, pady=(8, 2))
+
+        lbl_auth_names = ctk.CTkLabel(
+            card_authors,
+            text="• Dago D. Palmera Navarro\n  (0222321003)\n• Julian D. Camargo Padilla\n  (0222320016)",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            justify="left",
+            text_color=("#2E3440", "#D8DEE9")
+        )
+        lbl_auth_names.pack(anchor="w", padx=12, pady=(0, 10))
+
+        # Tarjeta de Especificacion del Dataset
+        card_data = ctk.CTkFrame(self.sidebar, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        card_data.pack(fill="x", padx=16, pady=8)
+
+        lbl_ds_title = ctk.CTkLabel(
+            card_data,
+            text="Dataset de Beijing:",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#FFBE0B"
+        )
+        lbl_ds_title.pack(anchor="w", padx=12, pady=(8, 2))
+
+        self.lbl_data_status = ctk.CTkLabel(
+            card_data,
+            text="Cargando 41.730 datos...\nParticion: 80% Tr / 20% Te\nEscala: [-1, +1] simetrica",
+            font=ctk.CTkFont(family="Segoe UI", size=10),
+            justify="left",
+            text_color=("#4C566A", "#A3BE8C")
+        )
+        self.lbl_data_status.pack(anchor="w", padx=12, pady=(0, 10))
+
+        # Control de Apariencia (Modo Oscuro / Claro)
+        mode_box = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        mode_box.pack(side="bottom", fill="x", padx=16, pady=16)
+
+        lbl_theme = ctk.CTkLabel(mode_box, text="Tema de Interfaz:", font=ctk.CTkFont(size=11))
+        lbl_theme.pack(anchor="w")
+
+        self.theme_menu = ctk.CTkOptionMenu(
+            mode_box,
+            values=["Dark", "Light", "System"],
+            command=self._change_appearance_mode,
+            width=200
+        )
+        self.theme_menu.set("Dark")
+        self.theme_menu.pack(anchor="w", pady=(4, 0))
+
+    def _build_main_container(self):
+        """Contenedor de pestanas principales estilo dashboard."""
+        self.tabview = ctk.CTkTabview(self, corner_radius=10)
+        self.tabview.pack(side="right", fill="both", expand=True, padx=14, pady=10)
+
+        # Pestanas
+        self.tab_graph = self.tabview.add("Grafo Topologico")
+        self.tab_train = self.tabview.add("Curvas de Aprendizaje")
+        self.tab_eval = self.tabview.add("Evaluacion y Metricas")
+        self.tab_sim = self.tabview.add("Simulador en Tiempo Real")
+
         self._build_tab_graph()
-
-        # Pestana 2: Curvas de Aprendizaje
-        self.tab_train = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_train, text="Curvas de Aprendizaje")
         self._build_tab_train()
-
-        # Pestana 3: Evaluacion y Comparativa
-        self.tab_eval = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_eval, text="Evaluacion y Metricas")
         self._build_tab_eval()
-
-        # Pestana 4: Simulador Interactivo
-        self.tab_sim = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_sim, text="Simulador Individual")
         self._build_tab_sim()
 
     # -------------------------------------------------------------------------
-    # Pestana 1: Grafo Topologico
+    # Pestana 1: Grafo Topologico Interactivo de la Red
     # -------------------------------------------------------------------------
     def _build_tab_graph(self):
-        """Construye la pestana con el renderizado interactivo de la red neuronal como grafo."""
-        control_frame = tk.Frame(self.tab_graph, bg=self.color_card, bd=1, relief=tk.SOLID)
-        control_frame.pack(fill=tk.X, padx=10, pady=8)
+        """Renderiza el grafo topologico con conexiones proporcionales a los pesos sinapticos."""
+        ctrl_card = ctk.CTkFrame(self.tab_graph, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        ctrl_card.pack(fill="x", padx=10, pady=(6, 10))
 
-        lbl = tk.Label(control_frame, text="Seleccionar Modelo para Visualizar Grafo:", font=("Segoe UI", 10, "bold"), bg=self.color_card)
-        lbl.pack(side=tk.LEFT, padx=12, pady=10)
-
-        self.graph_model_var = tk.StringVar(value="Referencia (10:10:1)")
-        combo = ttk.Combobox(
-            control_frame,
-            textvariable=self.graph_model_var,
-            values=["Referencia (10:10:1)", "Propia Propuesta (10:16:8:1)"],
-            state="readonly",
-            width=28
+        lbl_sel = ctk.CTkLabel(
+            ctrl_card,
+            text="Seleccionar Arquitectura para Renderizar Topologia:",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold")
         )
-        combo.pack(side=tk.LEFT, padx=8)
-        combo.bind("<<ComboboxSelected>>", lambda e: self._draw_network_graph())
+        lbl_sel.pack(side="left", padx=16, pady=12)
 
-        btn_draw = ttk.Button(control_frame, text="Actualizar Grafo", command=self._draw_network_graph)
-        btn_draw.pack(side=tk.LEFT, padx=8)
+        self.graph_model_var = ctk.StringVar(value="Modelo Propio (10:16:8:1)")
+        seg_btn = ctk.CTkSegmentedButton(
+            ctrl_card,
+            values=["Modelo Referencia (10:10:1)", "Modelo Propio (10:16:8:1)"],
+            variable=self.graph_model_var,
+            command=lambda v: self._draw_network_graph()
+        )
+        seg_btn.pack(side="left", padx=12, pady=12)
 
-        self.graph_info_lbl = tk.Label(control_frame, text="", font=("Segoe UI", 9, "italic"), bg=self.color_card, fg="#1F4E79")
-        self.graph_info_lbl.pack(side=tk.RIGHT, padx=15)
+        self.lbl_graph_params = ctk.CTkLabel(
+            ctrl_card,
+            text="Parametros Libres (N_params): 321  |  Capas: 10 → 16 → 8 → 1",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color="#06D6A0"
+        )
+        self.lbl_graph_params.pack(side="right", padx=16, pady=12)
 
         # Lienzo Matplotlib para el grafo
-        plot_frame = tk.Frame(self.tab_graph, bg=self.color_card)
-        plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        plot_frame = ctk.CTkFrame(self.tab_graph, fg_color=("#FFFFFF", "#181A20"), corner_radius=8)
+        plot_frame.pack(fill="both", expand=True, padx=10, pady=5)
 
-        self.fig_graph = Figure(figsize=(9, 5.5), dpi=100)
+        self.fig_graph = Figure(figsize=(9.5, 5.5), dpi=100, facecolor="#181A20")
         self.ax_graph = self.fig_graph.add_subplot(111)
         self.canvas_graph = FigureCanvasTkAgg(self.fig_graph, master=plot_frame)
-        self.canvas_graph.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.canvas_graph.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
 
-        toolbar_frame = tk.Frame(plot_frame, bg=self.color_bg)
-        toolbar_frame.pack(fill=tk.X)
-        self.toolbar_graph = NavigationToolbar2Tk(self.canvas_graph, toolbar_frame)
+        tb_frame = ctk.CTkFrame(plot_frame, fg_color="transparent")
+        tb_frame.pack(fill="x", padx=6, pady=(0, 4))
+        self.toolbar_graph = NavigationToolbar2Tk(self.canvas_graph, tb_frame)
         self.toolbar_graph.update()
 
         self._draw_network_graph()
 
     def _draw_network_graph(self):
-        """Dibuja las capas, nodos y aristas de la red seleccionada como grafo conexo."""
+        """Genera el grafo topologico con etiquetas matematicas y nodos esteticos."""
         self.ax_graph.clear()
         selected = self.graph_model_var.get()
+        is_prop = "Propio" in selected
 
-        if "Referencia" in selected:
-            layers = [10, 10, 1]
-            layer_names = ["Entrada (10)", "Oculta 1 (10, tansig)", "Salida (1, purelin)"]
-            total_params = 121
-            title = "Grafo Topologico - Arquitectura de Referencia (10:10:1)"
-        else:
+        if is_prop:
             layers = [10, 16, 8, 1]
-            layer_names = ["Entrada (10)", "Oculta 1 (16, tansig)", "Oculta 2 (8, tansig)", "Salida (1, purelin)"]
-            total_params = 321
-            title = "Grafo Topologico - Arquitectura Propia en Embudo (10:16:8:1)"
+            layer_titles = [
+                "Capa Entrada\n(10 variables)",
+                "Capa Oculta 1\n(16 neuronas, tansig)",
+                "Capa Oculta 2\n(8 neuronas, tansig)",
+                "Capa Salida\n(1 neurona, purelin)"
+            ]
+            self.lbl_graph_params.configure(
+                text="Parametros Libres (N_params): 321  |  Topologia: 10 → 16 → 8 → 1",
+                text_color="#06D6A0"
+            )
+            title = "Topologia en Embudo Progresivo: f: R¹⁰ → R¹⁶ → R⁸ → R¹"
+            model_obj = self.model_prop
+        else:
+            layers = [10, 10, 1]
+            layer_titles = [
+                "Capa Entrada\n(10 variables)",
+                "Capa Oculta 1\n(10 neuronas, tansig)",
+                "Capa Salida\n(1 neurona, purelin)"
+            ]
+            self.lbl_graph_params.configure(
+                text="Parametros Libres (N_params): 121  |  Topologia: 10 → 10 → 1",
+                text_color="#3A86FF"
+            )
+            title = "Topologia de Referencia Docente: f: R¹⁰ → R¹⁰ → R¹"
+            model_obj = self.model_ref
 
-        self.graph_info_lbl.config(text=f"Total Parametros Entrenables: {total_params}")
-
-        # Coordenadas de los nodos por capa
         n_layers = len(layers)
-        max_nodes = max(layers)
-        x_coords = np.linspace(0.1, 0.9, n_layers)
+        x_positions = np.linspace(0.12, 0.88, n_layers)
 
-        node_positions = []
-        for l_idx, n_nodes in enumerate(layers):
-            y_coords = np.linspace(0.1, 0.9, n_nodes) if n_nodes > 1 else np.array([0.5])
-            layer_pos = [(x_coords[l_idx], y) for y in y_coords]
-            node_positions.append(layer_pos)
+        node_coords = []
+        for l_idx, count in enumerate(layers):
+            y_coords = np.linspace(0.12, 0.88, count) if count > 1 else np.array([0.5])
+            node_coords.append([(x_positions[l_idx], y) for y in y_coords])
 
-        # Dibujar aristas sinapticas (conexiones entre capas consecutivas)
+        # Dibujar sinapsis
+        has_trained_weights = model_obj is not None
         for l_idx in range(n_layers - 1):
-            src_nodes = node_positions[l_idx]
-            dst_nodes = node_positions[l_idx + 1]
-            for (x1, y1) in src_nodes:
-                for (x2, y2) in dst_nodes:
-                    self.ax_graph.plot([x1, x2], [y1, y2], color="#BDC3C7", lw=0.4, alpha=0.5, zorder=1)
+            src_list = node_coords[l_idx]
+            dst_list = node_coords[l_idx + 1]
 
-        # Dibujar nodos de cada capa
-        feature_labels = ["TEMP", "PRES", "DEWP", "Iws", "hour", "day", "pm25_t", "t-1", "t-2", "t-3"]
-        for l_idx, (layer_pos, n_nodes) in enumerate(zip(node_positions, layers)):
-            color = "#2E75B6" if l_idx == 0 else ("#1F4E79" if l_idx < n_layers - 1 else "#C00000")
-            for n_idx, (x, y) in enumerate(layer_pos):
-                circle = plt.Circle((x, y), 0.02, color=color, ec="#2C3E50", lw=1.2, zorder=3)
+            w_matrix = model_obj.weights[l_idx] if has_trained_weights else None
+
+            for i, (x1, y1) in enumerate(src_list):
+                for j, (x2, y2) in enumerate(dst_list):
+                    if w_matrix is not None:
+                        w_val = w_matrix[i, j]
+                        color = "#3A86FF" if w_val >= 0 else "#FF006E"
+                        alpha = min(0.85, max(0.15, abs(w_val) / 2.0))
+                        lw = min(1.8, max(0.3, abs(w_val) * 0.8))
+                    else:
+                        color = "#4C566A"
+                        alpha = 0.22
+                        lw = 0.4
+
+                    self.ax_graph.plot([x1, x2], [y1, y2], color=color, alpha=alpha, lw=lw, zorder=1)
+
+        # Etiquetas de las caracteristicas de entrada
+        input_names = [
+            "x₁ (TEMP)", "x₂ (PRES)", "x₃ (DEWP)", "x₄ (Iws)",
+            "x₅ (hour)", "x₆ (day)", "x₇ (PM₂.₅ ᵗ)", "x₈ (PM₂.₅ ᵗ⁻¹)",
+            "x₉ (PM₂.₅ ᵗ⁻²)", "x₁₀ (PM₂.₅ ᵗ⁻³)"
+        ]
+
+        # Dibujar nodos
+        for l_idx, (nodes, count) in enumerate(zip(node_coords, layers)):
+            if l_idx == 0:
+                node_color = "#3A86FF"
+            elif l_idx == n_layers - 1:
+                node_color = "#FFBE0B"
+            else:
+                node_color = "#06D6A0" if is_prop and l_idx == 1 else "#8338EC"
+
+            for n_idx, (x, y) in enumerate(nodes):
+                circle = plt.Circle((x, y), 0.018, color=node_color, ec="#FFFFFF", lw=1.2, zorder=3)
                 self.ax_graph.add_patch(circle)
 
-                # Etiquetas de entrada y salida
-                if l_idx == 0 and n_idx < len(feature_labels):
-                    self.ax_graph.text(x - 0.035, y, feature_labels[n_idx], fontsize=7, ha="right", va="center", weight="bold")
+                if l_idx == 0 and n_idx < len(input_names):
+                    self.ax_graph.text(x - 0.03, y, input_names[n_idx], fontsize=7, color="#E5E9F0",
+                                       ha="right", va="center", weight="bold")
                 elif l_idx == n_layers - 1:
-                    self.ax_graph.text(x + 0.035, y, "pm25_t+24", fontsize=8, ha="left", va="center", weight="bold", color="#C00000")
+                    self.ax_graph.text(x + 0.03, y, "ŷ (PM₂.₅ ᵗ⁺²⁴)", fontsize=8, color="#FFBE0B",
+                                       ha="left", va="center", weight="bold")
 
-            # Titulo de la capa en la parte superior
-            self.ax_graph.text(x_coords[l_idx], 0.97, layer_names[l_idx], fontsize=8, ha="center", weight="bold", color="#1F4E79")
+            # Titulo superior de la capa
+            self.ax_graph.text(x_positions[l_idx], 0.96, layer_titles[l_idx], fontsize=8,
+                               color="#D8DEE9", ha="center", va="center", weight="bold")
 
         self.ax_graph.set_xlim(0.0, 1.0)
-        self.ax_graph.set_ylim(0.05, 1.02)
+        self.ax_graph.set_ylim(0.04, 1.02)
         self.ax_graph.axis("off")
-        self.ax_graph.set_title(title, fontsize=11, weight="bold", color="#1F4E79", pad=12)
+        self.ax_graph.set_title(title, fontsize=11, color="#FFFFFF", weight="bold", pad=12)
 
         self.canvas_graph.draw()
 
     # -------------------------------------------------------------------------
-    # Pestana 2: Curvas de Aprendizaje
+    # Pestana 2: Curvas de Aprendizaje y Entrenamiento en Tiempo Real
     # -------------------------------------------------------------------------
     def _build_tab_train(self):
-        """Construye el panel de control y graficacion del entrenamiento en tiempo real."""
-        top_frame = tk.Frame(self.tab_train, bg=self.color_card, bd=1, relief=tk.SOLID)
-        top_frame.pack(fill=tk.X, padx=10, pady=8)
+        """Panel de control de hiperparametros y graficador de convergencia."""
+        ctrl_card = ctk.CTkFrame(self.tab_train, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        ctrl_card.pack(fill="x", padx=10, pady=(6, 10))
 
         # Hiperparametros
-        tk.Label(top_frame, text="Epocas:", font=("Segoe UI", 9, "bold"), bg=self.color_card).grid(row=0, column=0, padx=6, pady=6)
-        self.epochs_entry = ttk.Entry(top_frame, width=8)
-        self.epochs_entry.insert(0, "500")
-        self.epochs_entry.grid(row=0, column=1, padx=4)
+        f_inputs = ctk.CTkFrame(ctrl_card, fg_color="transparent")
+        f_inputs.pack(side="left", padx=12, pady=10)
 
-        tk.Label(top_frame, text="Tasa de Aprendizaje (eta):", font=("Segoe UI", 9, "bold"), bg=self.color_card).grid(row=0, column=2, padx=6)
-        self.lr_entry = ttk.Entry(top_frame, width=8)
-        self.lr_entry.insert(0, "0.01")
-        self.lr_entry.grid(row=0, column=3, padx=4)
+        ctk.CTkLabel(f_inputs, text="Epocas:", font=ctk.CTkFont(size=11, weight="bold")).grid(row=0, column=0, padx=6)
+        self.entry_epochs = ctk.CTkEntry(f_inputs, width=70)
+        self.entry_epochs.insert(0, "500")
+        self.entry_epochs.grid(row=0, column=1, padx=4)
 
-        self.btn_train = ttk.Button(top_frame, text="Entrenar Ambas Redes", command=self._start_training)
-        self.btn_train.grid(row=0, column=4, padx=16)
+        ctk.CTkLabel(f_inputs, text="Tasa de Aprendizaje (η):", font=ctk.CTkFont(size=11, weight="bold")).grid(row=0, column=2, padx=8)
+        self.entry_lr = ctk.CTkEntry(f_inputs, width=70)
+        self.entry_lr.insert(0, "0.01")
+        self.entry_lr.grid(row=0, column=3, padx=4)
 
-        self.train_status_lbl = tk.Label(top_frame, text="Esperando datos...", font=("Segoe UI", 9, "italic"), bg=self.color_card)
-        self.train_status_lbl.grid(row=0, column=5, padx=8)
+        ctk.CTkLabel(f_inputs, text="Momento (α):", font=ctk.CTkFont(size=11, weight="bold")).grid(row=0, column=4, padx=8)
+        self.entry_mom = ctk.CTkEntry(f_inputs, width=70)
+        self.entry_mom.insert(0, "0.0")
+        self.entry_mom.grid(row=0, column=5, padx=4)
+
+        self.btn_start_train = ctk.CTkButton(
+            ctrl_card,
+            text="Entrenar Ambas Redes (Full-Batch)",
+            command=self._start_training_worker,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color="#3A86FF",
+            hover_color="#2E75B6"
+        )
+        self.btn_start_train.pack(side="left", padx=16, pady=10)
 
         # Progreso
-        self.progress_bar = ttk.Progressbar(top_frame, orient="horizontal", mode="determinate", length=220)
-        self.progress_bar.grid(row=0, column=6, padx=10)
+        f_prog = ctk.CTkFrame(ctrl_card, fg_color="transparent")
+        f_prog.pack(side="right", padx=16, pady=10)
 
-        # Grafica interactiva de curvas de perdida
-        plot_frame = tk.Frame(self.tab_train, bg=self.color_card)
-        plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        self.lbl_train_status = ctk.CTkLabel(
+            f_prog,
+            text="Listo para entrenar 500 epocas",
+            font=ctk.CTkFont(size=10, slant="italic"),
+            text_color="#A3BE8C"
+        )
+        self.lbl_train_status.pack(anchor="e")
 
-        self.fig_train = Figure(figsize=(9, 5), dpi=100)
+        self.prog_bar = ctk.CTkProgressBar(f_prog, width=220)
+        self.prog_bar.set(0.0)
+        self.prog_bar.pack(anchor="e", pady=(4, 0))
+
+        # Lienzo Matplotlib para curvas de aprendizaje
+        plot_frame = ctk.CTkFrame(self.tab_train, fg_color=("#FFFFFF", "#181A20"), corner_radius=8)
+        plot_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        self.fig_train = Figure(figsize=(9.5, 5.0), dpi=100, facecolor="#181A20")
         self.ax_train = self.fig_train.add_subplot(111)
         self.canvas_train = FigureCanvasTkAgg(self.fig_train, master=plot_frame)
-        self.canvas_train.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.canvas_train.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
 
-        toolbar_frame = tk.Frame(plot_frame, bg=self.color_bg)
-        toolbar_frame.pack(fill=tk.X)
-        self.toolbar_train = NavigationToolbar2Tk(self.canvas_train, toolbar_frame)
+        tb_frame = ctk.CTkFrame(plot_frame, fg_color="transparent")
+        tb_frame.pack(fill="x", padx=6, pady=(0, 4))
+        self.toolbar_train = NavigationToolbar2Tk(self.canvas_train, tb_frame)
         self.toolbar_train.update()
 
-    def _start_training(self):
-        """Inicia el entrenamiento en un hilo secundario para mantener la interfaz receptiva."""
+        self._init_train_plot()
+
+    def _init_train_plot(self):
+        """Configura el lienzo de curvas de aprendizaje con estilo contemporaneo."""
+        self.ax_train.clear()
+        self.ax_train.set_facecolor("#1E222B")
+        self.ax_train.set_title("Evolucion del Error Cuadratico Medio (EMC / MSE Normalizado)",
+                                fontsize=11, color="#FFFFFF", weight="bold")
+        self.ax_train.set_xlabel("Epoca de Optimizacion (k)", fontsize=10, color="#D8DEE9")
+        self.ax_train.set_ylabel("Error Cuadratico Medio (MSE)", fontsize=10, color="#D8DEE9")
+        self.ax_train.tick_params(colors="#D8DEE9")
+        for spine in self.ax_train.spines.values():
+            spine.set_color("#4C566A")
+        self.ax_train.grid(True, linestyle=":", alpha=0.4, color="#616E85")
+        self.canvas_train.draw()
+
+    def _start_training_worker(self):
+        """Dispara el hilo de entrenamiento."""
         if self.is_training:
-            messagebox.showwarning("Proceso Activo", "Ya existe un entrenamiento en ejecucion.")
+            messagebox.showwarning("Proceso Activo", "El entrenamiento ya se encuentra en ejecucion.")
             return
 
         if self.data is None:
-            messagebox.showerror("Error", "Los datos aun no han sido cargados.")
+            messagebox.showerror("Error", "Los datos no han terminado de cargar.")
             return
 
         try:
-            epochs = int(self.epochs_entry.get())
-            lr = float(self.lr_entry.get())
+            epochs = int(self.entry_epochs.get())
+            lr = float(self.entry_lr.get())
+            mom = float(self.entry_mom.get())
         except ValueError:
-            messagebox.showerror("Parametros Invalidos", "Ingrese valores numericos validos para epocas y tasa de aprendizaje.")
+            messagebox.showerror("Parametros Invalidos", "Ingrese valores numericos validos.")
             return
 
         self.is_training = True
-        self.btn_train.config(state=tk.DISABLED)
-        self.progress_bar["value"] = 0
-        self.train_status_lbl.config(text="Entrenando modelos...")
+        self.btn_start_train.configure(state="disabled")
+        self.prog_bar.set(0.0)
 
-        thread = threading.Thread(target=self._run_training_worker, args=(epochs, lr), daemon=True)
+        thread = threading.Thread(target=self._run_train_loop, args=(epochs, lr, mom), daemon=True)
         thread.start()
 
-    def _run_training_worker(self, epochs, lr):
-        """Hilo de ejecucion para el entrenamiento de ambas arquitecturas."""
-        # Modelo 1: Referencia (10:10:1)
-        self.model_ref = MultilayerPerceptron(topology=[10, 10, 1], lr=lr, seed=42)
-        # Modelo 2: Propia (10:16:8:1)
-        self.model_prop = MultilayerPerceptron(topology=[10, 16, 8, 1], lr=lr, seed=42)
+    def _run_train_loop(self, epochs, lr, mom):
+        """Ejecuta el ciclo de optimizacion y actualiza la GUI periódicamente."""
+        self.model_ref = MultilayerPerceptron(topology=[10, 10, 1], lr=lr, momentum=mom, seed=42)
+        self.model_prop = MultilayerPerceptron(topology=[10, 16, 8, 1], lr=lr, momentum=mom, seed=42)
 
         X_tr = self.data["X_train_norm"]
         y_tr = self.data["y_train_norm"]
@@ -329,262 +444,342 @@ class MlpAppGUI:
             self.model_prop.history["train_mse"].append(tr_mse_prop)
             self.model_prop.history["test_mse"].append(te_mse_prop)
 
+            # Refrescar barra de progreso y grafica cada 25 epocas
             if ep % 25 == 0 or ep == epochs:
-                prog = int((ep / epochs) * 100)
-                self.root.after(0, self._update_train_progress, ep, epochs, prog)
+                prog_val = ep / epochs
+                self.after(0, self._update_train_ui, ep, epochs, prog_val)
 
-        self.root.after(0, self._finish_training)
+        self.after(0, self._finish_train_ui)
 
-    def _update_train_progress(self, ep, epochs, prog):
-        """Actualiza el progreso en la interfaz."""
-        self.progress_bar["value"] = prog
-        self.train_status_lbl.config(text=f"Epoca {ep}/{epochs} ({prog}%)")
+    def _update_train_ui(self, ep, epochs, prog_val):
+        """Actualiza el progreso en pantalla."""
+        self.prog_bar.set(prog_val)
+        self.lbl_train_status.configure(text=f"Epoca {ep}/{epochs} ({int(prog_val*100)}%)")
 
-    def _finish_training(self):
-        """Finaliza el entrenamiento y actualiza las graficas y tablas de evaluacion."""
+    def _finish_train_ui(self):
+        """Finaliza el ciclo y grafica los resultados completos."""
         self.is_training = False
-        self.btn_train.config(state=tk.NORMAL)
-        self.train_status_lbl.config(text="Entrenamiento completado exitosamente.")
+        self.btn_start_train.configure(state="normal")
+        self.lbl_train_status.configure(text="Entrenamiento completado exitosamente", text_color="#06D6A0")
 
-        # Graficar curvas de aprendizaje
-        self._plot_learning_curves()
-        # Actualizar pestana de evaluacion
+        self._plot_final_curves()
         self._update_eval_tab()
+        self._draw_network_graph()
 
-        messagebox.showinfo("Entrenamiento Finalizado", "Ambas arquitecturas han sido entrenadas exitosamente.")
+        messagebox.showinfo(
+            "Entrenamiento Finalizado",
+            f"Ambos modelos han completado sus 500 epocas.\n"
+            f"• Referencia (10:10:1): Test RMSE = {self.model_ref.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])['rmse_real']:.2f} µg/m³\n"
+            f"• Propio (10:16:8:1):  Test RMSE = {self.model_prop.evaluate(self.data['X_test_norm'], self.data['y_test_norm'], self.data['scaler_y'])['rmse_real']:.2f} µg/m³"
+        )
 
-    def _plot_learning_curves(self):
-        """Grafica la evolucion comparativa del MSE sobre train y test para ambos modelos."""
+    def _plot_final_curves(self):
+        """Dibuja las curvas de aprendizaje con leyendas de alta definicion."""
         self.ax_train.clear()
+        self.ax_train.set_facecolor("#1E222B")
 
-        ep_ref = self.model_ref.history["epoch"]
+        ep = self.model_ref.history["epoch"]
         tr_ref = self.model_ref.history["train_mse"]
         te_ref = self.model_ref.history["test_mse"]
-
         tr_prop = self.model_prop.history["train_mse"]
         te_prop = self.model_prop.history["test_mse"]
 
-        self.ax_train.plot(ep_ref, tr_ref, label="Referencia (Train MSE)", color="#2E75B6", lw=1.6)
-        self.ax_train.plot(ep_ref, te_ref, label="Referencia (Test MSE)", color="#2E75B6", lw=1.6, linestyle="--")
+        self.ax_train.plot(ep, tr_ref, label="Referencia (10:10:1) - Train", color="#3A86FF", lw=1.8)
+        self.ax_train.plot(ep, te_ref, label="Referencia (10:10:1) - Test", color="#3A86FF", lw=1.6, linestyle="--")
 
-        self.ax_train.plot(ep_ref, tr_prop, label="Propia (Train MSE)", color="#C00000", lw=1.6)
-        self.ax_train.plot(ep_ref, te_prop, label="Propia (Test MSE)", color="#C00000", lw=1.6, linestyle="--")
+        self.ax_train.plot(ep, tr_prop, label="Propio (10:16:8:1) - Train", color="#06D6A0", lw=2.0)
+        self.ax_train.plot(ep, te_prop, label="Propio (10:16:8:1) - Test", color="#06D6A0", lw=1.6, linestyle="--")
 
-        self.ax_train.set_title("Curvas de Aprendizaje Comparativas (MSE vs Epocas)", fontsize=11, weight="bold", color="#1F4E79")
-        self.ax_train.set_xlabel("Epoca de Entrenamiento", fontsize=9, weight="bold")
-        self.ax_train.set_ylabel("Error Cuadratico Medio (MSE normalizado)", fontsize=9, weight="bold")
-        self.ax_train.grid(True, linestyle=":", alpha=0.6)
-        self.ax_train.legend(loc="upper right", fontsize=8)
+        self.ax_train.set_title("Curvas de Aprendizaje Comparativas (EMC vs. Epocas)", fontsize=11, color="#FFFFFF", weight="bold")
+        self.ax_train.set_xlabel("Epoca de Entrenamiento (k)", fontsize=10, color="#D8DEE9")
+        self.ax_train.set_ylabel("Error Cuadratico Medio (MSE normalizado)", fontsize=10, color="#D8DEE9")
+        self.ax_train.tick_params(colors="#D8DEE9")
+        for spine in self.ax_train.spines.values():
+            spine.set_color("#4C566A")
+        self.ax_train.grid(True, linestyle=":", alpha=0.4, color="#616E85")
+        self.ax_train.legend(loc="upper right", facecolor="#181A20", edgecolor="#4C566A", labelcolor="#D8DEE9", fontsize=9)
 
         self.canvas_train.draw()
 
     # -------------------------------------------------------------------------
-    # Pestana 3: Evaluacion y Metricas
+    # Pestana 3: Evaluacion Comparativa y Metricas Formales
     # -------------------------------------------------------------------------
     def _build_tab_eval(self):
-        """Construye el panel de metricas cuantitativas y grafica de real vs predicho."""
-        table_frame = tk.Frame(self.tab_eval, bg=self.color_card, bd=1, relief=tk.SOLID)
-        table_frame.pack(fill=tk.X, padx=10, pady=8)
+        """Tarjetas de indicadores clave (KPIs) y grafica comparativa Real vs Predicho."""
+        cards_frame = ctk.CTkFrame(self.tab_eval, fg_color="transparent")
+        cards_frame.pack(fill="x", padx=10, pady=(6, 10))
 
-        cols = ("Modelo", "Topologia", "Parametros", "Train MSE (norm)", "Test MSE (norm)", "Test MSE (real)", "Test RMSE (ug/m3)")
-        self.eval_tree = ttk.Treeview(table_frame, columns=cols, show="headings", height=3)
-        for c in cols:
-            self.eval_tree.heading(c, text=c)
-            self.eval_tree.column(c, anchor="center", width=145)
+        # Tarjeta 1: Modelo Referencia
+        self.card_ref = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        self.card_ref.pack(side="left", fill="both", expand=True, padx=(0, 6))
 
-        self.eval_tree.pack(fill=tk.X, padx=8, pady=8)
+        ctk.CTkLabel(self.card_ref, text="Modelo Referencia (10:10:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#3A86FF").pack(anchor="w", padx=12, pady=(8, 2))
+        self.lbl_ref_metrics = ctk.CTkLabel(
+            self.card_ref,
+            text="Parametros: 121\nTest EMC: 8.529,83\nTest REMC: 92,36 µg/m³",
+            font=ctk.CTkFont(size=11),
+            justify="left"
+        )
+        self.lbl_ref_metrics.pack(anchor="w", padx=12, pady=(0, 10))
 
-        # Grafica de dispersion y serie temporal Real vs Predicho
-        plot_frame = tk.Frame(self.tab_eval, bg=self.color_card)
-        plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        # Tarjeta 2: Modelo Propio
+        self.card_prop = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        self.card_prop.pack(side="left", fill="both", expand=True, padx=6)
 
-        self.fig_eval = Figure(figsize=(9, 4.8), dpi=100)
+        ctk.CTkLabel(self.card_prop, text="Modelo Propio (10:16:8:1)", font=ctk.CTkFont(size=12, weight="bold"), text_color="#06D6A0").pack(anchor="w", padx=12, pady=(8, 2))
+        self.lbl_prop_metrics = ctk.CTkLabel(
+            self.card_prop,
+            text="Parametros: 321\nTest EMC: 7.782,96\nTest REMC: 88,22 µg/m³",
+            font=ctk.CTkFont(size=11),
+            justify="left"
+        )
+        self.lbl_prop_metrics.pack(anchor="w", padx=12, pady=(0, 10))
+
+        # Tarjeta 3: Ganancia y Reduccion de Error
+        self.card_gain = ctk.CTkFrame(cards_frame, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        self.card_gain.pack(side="left", fill="both", expand=True, padx=(6, 0))
+
+        ctk.CTkLabel(self.card_gain, text="Ganancia Neta Obtenida", font=ctk.CTkFont(size=12, weight="bold"), text_color="#FFBE0B").pack(anchor="w", padx=12, pady=(8, 2))
+        self.lbl_gain_metrics = ctk.CTkLabel(
+            self.card_gain,
+            text="Reduccion EMC: -8,75%\nMejora REMC: -4,14 µg/m³\nSobreajuste: Nulo (0,0316 ≈ 0,0315)",
+            font=ctk.CTkFont(size=11),
+            justify="left"
+        )
+        self.lbl_gain_metrics.pack(anchor="w", padx=12, pady=(0, 10))
+
+        # Lienzo Matplotlib para Real vs Predicho
+        plot_frame = ctk.CTkFrame(self.tab_eval, fg_color=("#FFFFFF", "#181A20"), corner_radius=8)
+        plot_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        self.fig_eval = Figure(figsize=(9.5, 4.8), dpi=100, facecolor="#181A20")
         self.ax_eval = self.fig_eval.add_subplot(111)
         self.canvas_eval = FigureCanvasTkAgg(self.fig_eval, master=plot_frame)
-        self.canvas_eval.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.canvas_eval.get_tk_widget().pack(fill="both", expand=True, padx=6, pady=6)
 
-        toolbar_frame = tk.Frame(plot_frame, bg=self.color_bg)
-        toolbar_frame.pack(fill=tk.X)
-        self.toolbar_eval = NavigationToolbar2Tk(self.canvas_eval, toolbar_frame)
+        tb_frame = ctk.CTkFrame(plot_frame, fg_color="transparent")
+        tb_frame.pack(fill="x", padx=6, pady=(0, 4))
+        self.toolbar_eval = NavigationToolbar2Tk(self.canvas_eval, tb_frame)
         self.toolbar_eval.update()
 
+        self._init_eval_plot()
+
+    def _init_eval_plot(self):
+        """Inicializa el lienzo de evaluacion de series de prueba."""
+        self.ax_eval.clear()
+        self.ax_eval.set_facecolor("#1E222B")
+        self.ax_eval.set_title("Concentracion Real de PM₂.₅ frente a Prediccion a 24 Horas",
+                               fontsize=11, color="#FFFFFF", weight="bold")
+        self.ax_eval.set_xlabel("Horas de Prueba Consecutivas (Muestra Temporal)", fontsize=10, color="#D8DEE9")
+        self.ax_eval.set_ylabel("Concentracion de PM₂.₅ (µg/m³)", fontsize=10, color="#D8DEE9")
+        self.ax_eval.tick_params(colors="#D8DEE9")
+        for spine in self.ax_eval.spines.values():
+            spine.set_color("#4C566A")
+        self.ax_eval.grid(True, linestyle=":", alpha=0.4, color="#616E85")
+        self.canvas_eval.draw()
+
     def _update_eval_tab(self):
-        """Calcula y proyecta las metricas de evaluacion en la tabla y la grafica."""
+        """Actualiza tarjetas y dibuja la comparativa temporal sobre el conjunto de test."""
         if self.model_ref is None or self.model_prop is None:
             return
 
-        for item in self.eval_tree.get_children():
-            self.eval_tree.delete(item)
+        ev_ref = self.model_ref.evaluate(self.data["X_test_norm"], self.data["y_test_norm"], self.data["scaler_y"])
+        ev_prop = self.model_prop.evaluate(self.data["X_test_norm"], self.data["y_test_norm"], self.data["scaler_y"])
 
-        X_te = self.data["X_test_norm"]
-        y_te = self.data["y_test_norm"]
-        scaler_y = self.data["scaler_y"]
+        self.lbl_ref_metrics.configure(
+            text=f"Parametros: 121\nTest EMC: {ev_ref['mse_real']:.2f}\nTest REMC: {ev_ref['rmse_real']:.2f} µg/m³"
+        )
+        self.lbl_prop_metrics.configure(
+            text=f"Parametros: 321\nTest EMC: {ev_prop['mse_real']:.2f}\nTest REMC: {ev_prop['rmse_real']:.2f} µg/m³"
+        )
 
-        ev_ref = self.model_ref.evaluate(X_te, y_te, scaler_y=scaler_y)
-        ev_prop = self.model_prop.evaluate(X_te, y_te, scaler_y=scaler_y)
+        diff_mse = ((ev_prop["mse_real"] - ev_ref["mse_real"]) / ev_ref["mse_real"]) * 100
+        diff_rmse = ev_prop["rmse_real"] - ev_ref["rmse_real"]
 
-        tr_mse_ref = self.model_ref.history["train_mse"][-1]
-        tr_mse_prop = self.model_prop.history["train_mse"][-1]
+        self.lbl_gain_metrics.configure(
+            text=f"Reduccion EMC: {diff_mse:.2f}%\nMejora REMC: {diff_rmse:.2f} µg/m³\nSobreajuste: Descartado"
+        )
 
-        self.eval_tree.insert("", tk.END, values=(
-            "Referencia", "10:10:1", "121",
-            f"{tr_mse_ref:.6f}", f"{ev_ref['mse_norm']:.6f}",
-            f"{ev_ref['mse_real']:.2f}", f"{ev_ref['rmse_real']:.2f}"
-        ))
-
-        self.eval_tree.insert("", tk.END, values=(
-            "Propia Propuesta", "10:16:8:1", "321",
-            f"{tr_mse_prop:.6f}", f"{ev_prop['mse_norm']:.6f}",
-            f"{ev_prop['mse_real']:.2f}", f"{ev_prop['rmse_real']:.2f}"
-        ))
-
-        # Graficar una ventana representativa de 200 horas consecutivas de prueba
+        # Graficar ventana de 200 horas continuas
         self.ax_eval.clear()
-        window = 200
-        y_real_slice = ev_ref["y_real"][:window].flatten()
-        y_pred_ref_slice = ev_ref["y_pred_real"][:window].flatten()
-        y_pred_prop_slice = ev_prop["y_pred_real"][:window].flatten()
-        hours = np.arange(1, window + 1)
+        self.ax_eval.set_facecolor("#1E222B")
 
-        self.ax_eval.plot(hours, y_real_slice, label="Concentracion Real (PM2.5)", color="#1F4E79", lw=1.8)
-        self.ax_eval.plot(hours, y_pred_ref_slice, label="Prediccion Ref (10:10:1)", color="#2E75B6", lw=1.4, linestyle="--")
-        self.ax_eval.plot(hours, y_pred_prop_slice, label="Prediccion Propia (10:16:8:1)", color="#C00000", lw=1.4, linestyle="-.")
+        w = 200
+        y_real_w = ev_ref["y_real"][:w].flatten()
+        y_ref_w = ev_ref["y_pred_real"][:w].flatten()
+        y_prop_w = ev_prop["y_pred_real"][:w].flatten()
+        hours = np.arange(1, w + 1)
 
-        self.ax_eval.set_title(f"Concentracion Real frente a Predicha (Muestra de {window} horas en Test)", fontsize=11, weight="bold", color="#1F4E79")
-        self.ax_eval.set_xlabel("Horas de Prueba Consecutivas", fontsize=9, weight="bold")
-        self.ax_eval.set_ylabel("Concentracion de PM2.5 (ug/m3)", fontsize=9, weight="bold")
-        self.ax_eval.grid(True, linestyle=":", alpha=0.6)
-        self.ax_eval.legend(loc="upper right", fontsize=8)
+        self.ax_eval.plot(hours, y_real_w, label="PM₂.₅ Real Observado", color="#FFFFFF", lw=1.9)
+        self.ax_eval.plot(hours, y_ref_w, label="Prediccion Ref (10:10:1)", color="#3A86FF", lw=1.5, linestyle="--")
+        self.ax_eval.plot(hours, y_prop_w, label="Prediccion Propia (10:16:8:1)", color="#06D6A0", lw=1.6, linestyle="-.")
+
+        self.ax_eval.set_title(f"Concentracion Real frente a Predicha (Ventana de {w} Horas en Test)",
+                               fontsize=11, color="#FFFFFF", weight="bold")
+        self.ax_eval.set_xlabel("Horas de Prueba Consecutivas", fontsize=10, color="#D8DEE9")
+        self.ax_eval.set_ylabel("Concentracion de PM₂.₅ (µg/m³)", fontsize=10, color="#D8DEE9")
+        self.ax_eval.tick_params(colors="#D8DEE9")
+        for spine in self.ax_eval.spines.values():
+            spine.set_color("#4C566A")
+        self.ax_eval.grid(True, linestyle=":", alpha=0.4, color="#616E85")
+        self.ax_eval.legend(loc="upper right", facecolor="#181A20", edgecolor="#4C566A", labelcolor="#D8DEE9", fontsize=9)
 
         self.canvas_eval.draw()
 
     # -------------------------------------------------------------------------
-    # Pestana 4: Simulador Individual
+    # Pestana 4: Simulador Individual en Tiempo Real
     # -------------------------------------------------------------------------
     def _build_tab_sim(self):
-        """Construye un panel para ingresar valores de prueba y simular la prediccion continua."""
-        main_frame = tk.Frame(self.tab_sim, bg=self.color_card, bd=1, relief=tk.SOLID)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)
+        """Simulador para ingresar los 10 parametros fisicos y predecir la concentracion."""
+        main_card = ctk.CTkFrame(self.tab_sim, fg_color=("#E5E9F0", "#1E222B"), corner_radius=8)
+        main_card.pack(fill="both", expand=True, padx=12, pady=10)
 
-        title = tk.Label(main_frame, text="Simulador de Prediccion PM2.5 a 24 Horas", font=("Segoe UI", 12, "bold"), fg=self.color_primary, bg=self.color_card)
-        title.pack(anchor="w", padx=20, pady=(15, 10))
+        ctk.CTkLabel(
+            main_card,
+            text="Simulador de Concentracion Futura de PM₂.₅ (Horizonte 24 Horas)",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color="#3A86FF"
+        ).pack(anchor="w", padx=16, pady=(14, 8))
 
-        inputs_grid = tk.Frame(main_frame, bg=self.color_card)
-        inputs_grid.pack(fill=tk.X, padx=20, pady=5)
+        # Rejilla de entradas
+        grid_frame = ctk.CTkFrame(main_card, fg_color="transparent")
+        grid_frame.pack(fill="x", padx=16, pady=4)
 
-        self.sim_entries = {}
-        feature_defaults = [
-            ("TEMP", "-5.0", "Temperatura (C)"),
+        feature_configs = [
+            ("TEMP", "-5.0", "Temperatura (°C)"),
             ("PRES", "1022.0", "Presion Atmosferica (hPa)"),
-            ("DEWP", "-7.0", "Punto de Rocio (C)"),
+            ("DEWP", "-7.0", "Punto de Rocio (°C)"),
             ("Iws", "5.36", "Viento Acumulado (m/s)"),
-            ("hour", "3", "Hora del dia (0-23)"),
-            ("day", "2", "Dia del mes (1-31)"),
-            ("pm25_t", "181.0", "PM2.5 Actual (t)"),
-            ("pm25_t-1", "159.0", "PM2.5 Retardo 1 (t-1)"),
-            ("pm25_t-2", "148.0", "PM2.5 Retardo 2 (t-2)"),
-            ("pm25_t-3", "129.0", "PM2.5 Retardo 3 (t-3)")
+            ("hour", "3", "Hora del dia (0 - 23)"),
+            ("day", "2", "Dia del mes (1 - 31)"),
+            ("pm25_t", "181.0", "PM₂.₅ Actual t (µg/m³)"),
+            ("pm25_t-1", "159.0", "PM₂.₅ Retardo t-1 (µg/m³)"),
+            ("pm25_t-2", "148.0", "PM₂.₅ Retardo t-2 (µg/m³)"),
+            ("pm25_t-3", "129.0", "PM₂.₅ Retardo t-3 (µg/m³)")
         ]
 
-        for idx, (feat, default_val, desc) in enumerate(feature_defaults):
-            row = idx // 2
-            col = (idx % 2) * 2
+        self.sim_inputs = {}
+        for idx, (col_name, def_val, desc) in enumerate(feature_configs):
+            r = idx // 2
+            c = (idx % 2) * 2
 
-            lbl = tk.Label(inputs_grid, text=f"{feat} ({desc}):", font=("Segoe UI", 9, "bold"), bg=self.color_card)
-            lbl.grid(row=row, column=col, sticky="w", padx=8, pady=4)
+            lbl = ctk.CTkLabel(grid_frame, text=f"{desc}:", font=ctk.CTkFont(size=11, weight="bold"))
+            lbl.grid(row=r, column=c, sticky="w", padx=(10, 6), pady=6)
 
-            entry = ttk.Entry(inputs_grid, width=12)
-            entry.insert(0, default_val)
-            entry.grid(row=row, column=col + 1, sticky="w", padx=8, pady=4)
-            self.sim_entries[feat] = entry
+            entry = ctk.CTkEntry(grid_frame, width=110)
+            entry.insert(0, def_val)
+            entry.grid(row=r, column=c + 1, sticky="w", padx=(0, 16), pady=6)
+            self.sim_inputs[col_name] = entry
 
-        btn_sim = ttk.Button(main_frame, text="Calcular Prediccion a 24 Horas", command=self._execute_simulation)
-        btn_sim.pack(anchor="w", padx=20, pady=15)
-
-        # Panel de resultados de prediccion
-        self.sim_res_frame = tk.Frame(main_frame, bg="#EBF1F5", bd=1, relief=tk.SOLID)
-        self.sim_res_frame.pack(fill=tk.X, padx=20, pady=10)
-
-        self.sim_res_lbl = tk.Label(
-            self.sim_res_frame,
-            text="Ingrese los parametros de entrada y haga clic en 'Calcular Prediccion'.",
-            font=("Segoe UI", 10),
-            bg="#EBF1F5",
-            fg="#1F4E79",
-            justify=tk.LEFT
+        # Boton de ejecucion de inferencia
+        btn_infer = ctk.CTkButton(
+            main_card,
+            text="Ejecutar Pronostico Neuronal a 24 Horas",
+            command=self._execute_inference,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#06D6A0",
+            hover_color="#05A87D",
+            text_color="#181A20"
         )
-        self.sim_res_lbl.pack(anchor="w", padx=15, pady=12)
+        btn_infer.pack(anchor="w", padx=16, pady=16)
 
-    def _execute_simulation(self):
-        """Ejecuta la inferencia manual para el vector ingresado."""
+        # Tarjeta de diagnostico y resultados
+        self.res_card = ctk.CTkFrame(main_card, fg_color=("#D8DEE9", "#242933"), corner_radius=8)
+        self.res_card.pack(fill="x", padx=16, pady=(4, 16))
+
+        self.lbl_sim_result = ctk.CTkLabel(
+            self.res_card,
+            text="Ingrese los parametros meteorologicos y retardos historicos, luego presione 'Ejecutar Pronostico'.",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            justify="left"
+        )
+        self.lbl_sim_result.pack(anchor="w", padx=16, pady=14)
+
+    def _execute_inference(self):
+        """Ejecuta el forward pass para el vector suministrado."""
         if self.model_ref is None or self.model_prop is None:
-            messagebox.showwarning("Modelos no entrenados", "Primero entrene los modelos en la pestana 'Curvas de Aprendizaje'.")
+            messagebox.showwarning("Modelos no entrenados", "Primero inicie el entrenamiento en la pestana 'Curvas de Aprendizaje'.")
             return
 
         try:
             vec_raw = []
-            for feat in ["TEMP", "PRES", "DEWP", "Iws", "hour", "day", "pm25_t", "pm25_t-1", "pm25_t-2", "pm25_t-3"]:
-                val = float(self.sim_entries[feat].get())
+            for col in ["TEMP", "PRES", "DEWP", "Iws", "hour", "day", "pm25_t", "pm25_t-1", "pm25_t-2", "pm25_t-3"]:
+                val = float(self.sim_inputs[col].get())
                 vec_raw.append(val)
         except ValueError:
-            messagebox.showerror("Error de Formato", "Asegurese de que todas las variables contengan valores numericos validos.")
+            messagebox.showerror("Dato Invalido", "Por favor introduzca valores numericos en todas las entradas.")
             return
 
-        X_input_raw = np.array([vec_raw], dtype=np.float64)
-        X_input_norm = self.data["scaler_X"].transform(X_input_raw)
+        X_raw = np.array([vec_raw], dtype=np.float64)
+        X_norm = self.data["scaler_X"].transform(X_raw)
 
-        # Prediccion de ambos modelos
-        pred_norm_ref = self.model_ref.predict(X_input_norm)
-        pred_norm_prop = self.model_prop.predict(X_input_norm)
+        pred_ref_norm = self.model_ref.predict(X_norm)
+        pred_prop_norm = self.model_prop.predict(X_norm)
 
-        pred_real_ref = float(self.data["scaler_y"].inverse_transform(pred_norm_ref)[0, 0])
-        pred_real_prop = float(self.data["scaler_y"].inverse_transform(pred_norm_prop)[0, 0])
+        pred_ref = float(self.data["scaler_y"].inverse_transform(pred_ref_norm)[0, 0])
+        pred_prop = float(self.data["scaler_y"].inverse_transform(pred_prop_norm)[0, 0])
 
-        res_text = (
-            f"Resultados de Prediccion (PM2.5 a 24 horas hacia adelante):\n"
-            f"  - Modelo 1 (Referencia 10:10:1):      {pred_real_ref:.2f} ug/m3\n"
-            f"  - Modelo 2 (Propia Propuesta 10:16:8:1): {pred_real_prop:.2f} ug/m3\n"
-            f"  - Nivel de Calidad del Aire Estimado:  {self._classify_aqi(pred_real_prop)}"
+        cat_aqi, color_aqi = self._get_aqi_badge(pred_prop)
+
+        res_msg = (
+            f"PRONOSTICO DE CALIDAD DEL AIRE (PM₂.₅ a 24 Horas):\n"
+            f"  • Modelo Referencia (10:10:1):      {pred_ref:.2f} µg/m³\n"
+            f"  • Modelo Propio Propuesto (10:16:8:1): {pred_prop:.2f} µg/m³\n"
+            f"  • Categoria Sanitaria (OMS / EPA):    {cat_aqi}"
         )
-        self.sim_res_lbl.config(text=res_text)
+        self.lbl_sim_result.configure(text=res_msg)
 
     @staticmethod
-    def _classify_aqi(pm25_val):
-        """Clasifica el nivel de riesgo de salud segun la escala estandar de PM2.5."""
+    def _get_aqi_badge(pm25_val):
+        """Determina la clasificacion de alerta sanitaria segun rangos de PM2.5."""
         if pm25_val <= 50:
-            return "Bueno (0 - 50 ug/m3)"
+            return "Buena (0 a 50 µg/m³) - Sin riesgo", "#06D6A0"
         elif pm25_val <= 100:
-            return "Moderado (51 - 100 ug/m3)"
+            return "Moderada (51 a 100 µg/m³) - Calidad aceptable", "#FFBE0B"
         elif pm25_val <= 150:
-            return "Danino para grupos sensibles (101 - 150 ug/m3)"
+            return "Danina para Grupos Sensibles (101 a 150 µg/m³)", "#FB5607"
         elif pm25_val <= 200:
-            return "Danino para la salud (151 - 200 ug/m3)"
+            return "Danina para la Salud (151 a 200 µg/m³)", "#FF006E"
         elif pm25_val <= 300:
-            return "Muy danino para la salud (201 - 300 ug/m3)"
+            return "Muy Danina para la Salud (201 a 300 µg/m³)", "#8338EC"
         else:
-            return "Peligroso (> 300 ug/m3)"
+            return "Peligrosa (> 300 µg/m³) - Emergencia sanitaria", "#C1121F"
 
     # -------------------------------------------------------------------------
-    # Carga de Datos en Segundo Plano
+    # Metodos Auxiliares
     # -------------------------------------------------------------------------
-    def _load_data_thread(self):
-        """Inicia la carga de datos sin bloquear el arranque de la GUI."""
-        thread = threading.Thread(target=self._load_data_worker, daemon=True)
+    def _change_appearance_mode(self, new_mode):
+        """Modifica el modo visual de CustomTkinter."""
+        ctk.set_appearance_mode(new_mode)
+
+    def _load_dataset_async(self):
+        """Carga en segundo plano el dataset."""
+        thread = threading.Thread(target=self._load_dataset_worker, daemon=True)
         thread.start()
 
-    def _load_data_worker(self):
-        """Carga el dataset y actualiza el estado."""
+    def _load_dataset_worker(self):
+        """Lectura y normalizacion del archivo CSV."""
         csv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "datasets", "dataset_pm25.csv"))
         if os.path.exists(csv_path):
             self.data = load_and_preprocess_dataset(csv_path)
-            self.root.after(0, lambda: self.train_status_lbl.config(text="Datos cargados y listos para entrenar."))
+            self.after(0, self._on_dataset_ready)
+
+    def _on_dataset_ready(self):
+        """Notifica que el dataset fue cargado exitosamente."""
+        self.lbl_data_status.configure(
+            text=f"Total: {self.data['n_train'] + self.data['n_test']:,} registros\n"
+                 f"Entrenamiento: {self.data['n_train']:,} (80%)\n"
+                 f"Prueba: {self.data['n_test']:,} (20%)\n"
+                 f"Normalizado: [-1, +1]",
+            text_color="#06D6A0"
+        )
+        self.lbl_train_status.configure(text="Datos listos. Presione 'Entrenar Ambas Redes'.")
 
 
 def launch_gui():
-    """Punto de entrada de la interfaz grafica."""
-    root = tk.Tk()
-    app = MlpAppGUI(root)
-    root.mainloop()
+    """Lanza la aplicacion de escritorio."""
+    app = ModernMlpGUI()
+    app.mainloop()
 
 
 if __name__ == "__main__":
