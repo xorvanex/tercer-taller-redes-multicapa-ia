@@ -168,25 +168,37 @@ tercer-taller-redes-multicapa-ia/
 │       └── Rubrica Octubre 2026.pdf     # Rúbrica de evaluación oficial (8 puntos)
 │
 ├── docs/
-│   ├── Auditoria_Estadistica_Dataset_PM25.xlsx # Libro Excel con fórmulas dinámicas
-│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx  # Documento técnico principal en OnlyOffice
-│   ├── img/                             # Figuras, diagramas topológicos y evidencias
+│   ├── Auditoria_Estadistica_Dataset_PM25.xlsx # Libro Excel con fórmulas dinámicas nativas
+│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.docx  # Documento técnico formal estructurado
+│   ├── Taller_RNA_MLP_IA_PALMERA_CAMARGO.pdf   # Informe técnico final en PDF para entrega
+│   ├── img/                             # Figuras experimentales generadas y diagramas
 │   │   ├── Arquitectura_Referencia_10_10_1.jpg
 │   │   ├── Arquitectura_Propia_10_16_8_1.jpg
 │   │   ├── Captura_Auditoria_Estadistica_Excel.png
+│   │   ├── Comparativa_Prediccion_Real_vs_Predicha.png
+│   │   ├── Curvas_Aprendizaje_Comparativas.png
+│   │   ├── Diagrama_Bloques_MATLAB_10_16_8_1.png
+│   │   ├── Dispersion_Real_vs_Predicho_Propio.png
 │   │   ├── Evidencia_Auditoria_Excel.png
-│   │   └── Publicacion_Classroom.png
-│   └── md/                              # Memorias analíticas y secciones del informe
+│   │   ├── Mapa_Calor_Pesos_W1_Propio.png
+│   │   └── Topologia_Grafo_Sinaptico_10_16_8_1.png
+│   └── md/                              # Capítulos y memorias técnicas en Markdown
 │       ├── 01_Introduccion_y_Objetivos.md
 │       ├── 02_Fundamentacion_Teorica.md
 │       ├── 03_Definicion_Problema_y_Caso_de_Estudio.md
-│       └── 04_Preparacion_y_Arquitecturas.md
+│       ├── 04_Preparacion_y_Arquitecturas.md
+│       ├── 05_Implementacion_y_Resultados.md
+│       └── 06_Conclusiones_Referencias_Anexos.md
 │
 ├── notebooks/
 │   └── 01_auditoria_y_verificacion_dataset_pm25.ipynb # Cuaderno interactivo (Colab/Jupyter)
 │
 ├── src/
-│   └── __init__.py                      # Módulo para implementación del script de entrenamiento
+│   ├── __init__.py                      # Inicializador de paquete
+│   ├── data_loader.py                   # Carga, partición 80/20 cronológica y escalador Min-Max
+│   ├── mlp.py                           # Perceptrón Multicapa vectorizado en NumPy con Backpropagation
+│   ├── app_gui.py                       # Interfaz gráfica moderna en CustomTkinter (4 pestañas interactivas)
+│   └── main.py                          # Punto de entrada dual con soporte para CLI y GUI
 │
 ├── .gitignore                           # Exclusiones de control de versiones
 ├── LICENSE                              # Licencia MIT oficial
@@ -196,26 +208,25 @@ tercer-taller-redes-multicapa-ia/
 
 ---
 
-## Requisitos y Configuración del Entorno
+## Modos de Ejecución del Software
 
-### 1. Clonar el Repositorio
+El sistema proporciona dos modalidades operativas complementarias mediante [`src/main.py`](src/main.py):
+
+### 1. Modo Consola Automatizado (`--cli`)
+Ejecuta el ciclo de entrenamiento completo de 500 épocas para ambas arquitecturas, imprime la auditoría cuantitativa de métricas en la terminal y exporta automáticamente las figuras científicas en alta resolución a `docs/img/`:
 ```bash
-git clone https://github.com/xorvanex/tercer-taller-redes-multicapa-ia.git
-cd tercer-taller-redes-multicapa-ia
+python src/main.py --cli
 ```
 
-### 2. Configurar Entorno Virtual en Python
-```bash
-python -m venv venv
-# En Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# En Linux/macOS:
-source venv/bin/activate
-```
+### 2. Modo Interfaz Gráfica de Escritorio (`--gui`)
+Inicia la aplicación de escritorio interactiva desarrollada con **CustomTkinter**, que cuenta con 4 módulos de trabajo:
+* **Topología y Relaciones:** Tres vistas conmutables (Grafo sináptico nítido, Diagrama de bloques estilo MATLAB y Mapa de calor de pesos $\mathbf{W}^{(1)}$).
+* **Curvas de Aprendizaje:** Monitor interactivo del MSE en tiempo real.
+* **Evaluación y Métricas:** Comparativa cuantitativa con series temporales superpuestas reales vs. predichas.
+* **Simulador en Tiempo Real:** Pronóstico puntual interactivo con diagnóstico meteorológico y bandas de riesgo ambiental de la OMS.
 
-### 3. Instalar Dependencias
 ```bash
-pip install -r requirements.txt
+python src/main.py --gui
 ```
 
 ---

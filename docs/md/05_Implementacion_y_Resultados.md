@@ -145,6 +145,10 @@ En cumplimiento del requerimiento de transparencia técnica, a continuación se 
    Se optó por procesar el tensor completo en cada época en lugar de Descenso de Gradiente Estocástico (SGD muestra a muestra). Esto permite calcular el gradiente analítico exacto de la función de coste cuadrática, garantizando curvas de pérdida suaves, deterministas y libres de ruido estocástico para una comparación justa entre ambas arquitecturas.
 4. **Diseño en Embudo Progresivo ($10 \to 16 \to 8 \to 1$):**  
    En lugar de incrementar el número de neuronas de forma homogénea, la estructura propuesta expande la dimensionalidad en la primera capa para capturar interacciones cruzadas no lineales y la contrae en la segunda capa para filtrar componentes redundantes, demostrando empíricamente una reducción del error cuadrático sin incurrir en sobreajuste.
+5. **Control de Estabilidad Mediante Recorte de Gradientes (*Gradient Clipping*):**  
+   Para evitar el fenómeno de gradientes explosivos (*exploding gradients*) durante las épocas iniciales de optimización por lote completo, los gradientes analíticos de pesos y sesgos fueron acotados en el intervalo $[-10, 10]$ antes de la actualización sináptica.
+6. **Acotamiento Físico de la Variable Objetivo ($[0,0, 1000,0]\ \mu\text{g/m}^3$):**  
+   Al emplear la función de activación lineal `purelin` en la capa de salida, la desnormalización matemática podría eventualmente arrojar valores negativos ante fluctuaciones numéricas. Se introdujo una regla de consistencia termodinámica que trunca las predicciones al intervalo físicamente válido $[0,0, 1000,0]\ \mu\text{g/m}^3$, impidiendo concentraciones negativas de material particulado y asegurando que las estimaciones no superen el rango histórico observado en la estación de Beijing ($994\ \mu\text{g/m}^3$).
 
 ---
 
