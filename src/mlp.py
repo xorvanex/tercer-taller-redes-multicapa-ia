@@ -288,11 +288,13 @@ class MultilayerPerceptron:
             rmse_real = float(np.sqrt(mse_real))
             mae_real = float(np.mean(abs_err))
             max_ae_real = float(np.max(abs_err))
+            min_ae_real = float(np.min(abs_err))
 
             results["mse_real"] = mse_real
             results["rmse_real"] = rmse_real
             results["mae_real"] = mae_real
             results["max_ae_real"] = max_ae_real
+            results["min_ae_real"] = min_ae_real
             results["y_real"] = y_real
             results["y_pred_real"] = y_pred_real
 
